@@ -1,2 +1,2 @@
 # Distributed Facility Booking System
-Distributed facility booking system using custom RPC framework. This system is composed of a Java client, C++ server, network middleware.
+Distributed facility booking system composed of a Java client and C++ server communicating via a network middleware using custom serialization and RPC framework
