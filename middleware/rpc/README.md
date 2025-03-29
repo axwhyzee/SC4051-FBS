@@ -20,12 +20,12 @@ pip install .  # installs rpc package
 
 ```
 source env/bin/activate
-rpc_tools --infile=proto.idl --outdir=../server/protos --rootdir=../server --lang=cpp
+rpc_tools --infile=proto.idl --outdir=../../server/protos --rootdir=../../server --lang=cpp
 ```
 
 #### Java
 
 ```
 source env/bin/activate
-rpc_tools --infile=proto.idl --outdir=../client/protos --rootdir=../client --lang=java
+rpc_tools --infile=proto.idl --outdir=../../client/protos --rootdir=../../client --lang=java
 ```

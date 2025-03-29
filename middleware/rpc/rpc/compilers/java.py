@@ -103,16 +103,41 @@ class JavaCompiler(BaseCompiler):
     def _handle_interface(
         cls, model: InterfaceModel, out_dir: Path, out_dir_relative_to: Path
     ) -> None:
-        package = out_dir.relative_to(out_dir_relative_to)
-        code = ""
-        if out_dir != out_dir_relative_to:
-            code += f"package {package};\n\n"
-        code += f"public interface {model.name}ServiceStub {{\n"
+        def create_service_stub():
+            """"
+            Service will be implemented by 
+            server to handle incoming RPCs
+            """
 
-        for method in model.methods:
-            code += f"{TAB}{method.ret_type} "
-            code += f"{method.name}("
-            code += ", ".join([_translate_attr(attr) for attr in method.args])
-            code += ");\n"
-        code += "}"
-        (out_dir / f"{model.name}.java").write_text(code)
+            code = ""
+            if out_dir != out_dir_relative_to:
+                code += f"package {package};\n\n"
+            code += f"public interface {model.name} {{\n"
+
+            for method in model.methods:
+                code += f"{TAB}{method.ret_type} "
+                code += f"{method.name}("
+                code += ", ".join([_translate_attr(attr) for attr in method.args])
+                code += ");\n"
+            code += "}"
+            (out_dir / f"{model.name}.java").write_text(code)
+
+        def create_client_stub():
+            """"Stub will be called by client to make RPCs"""
+
+            code = ""
+            if out_dir != out_dir_relative_to:
+                code += f"package {package};\n\n"
+            code += f"public class {model.name}Stub {{\n"
+
+            for method in model.methods:
+                code += f"{TAB}{method.ret_type} "
+                code += f"{method.name}("
+                code += ", ".join([_translate_attr(attr) for attr in method.args])
+                code += ") {/* TODO: marshall and send to server via UDP */};\n"
+            code += "}"
+            (out_dir / f"{model.name}Stub.java").write_text(code)
+
+        package = out_dir.relative_to(out_dir_relative_to)
+        create_service_stub()
+        create_client_stub()

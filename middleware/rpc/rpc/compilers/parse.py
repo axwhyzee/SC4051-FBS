@@ -79,12 +79,9 @@ PARSERS: Dict[Block, Type[AbstractParser]] = {
 def parse_interface_file(
     path: Path, callbacks: Dict[Block, Callable[[BlockModel], None]]
 ) -> None:
-    # remove spaces and consecutive whitespaces
-    text = path.read_text()
-
     block_types = "|".join([block.value for block in Block])
     pattern = rf"({block_types})\s+(\w+)\s*{{([^}}]+)}}"
-    matches = re.findall(pattern, text, re.DOTALL)
+    matches = re.findall(pattern, path.read_text(), re.DOTALL)
 
     for match in matches:
         block_type_str, block_name, block_body = match
