@@ -94,9 +94,9 @@ class JavaCompiler(BaseCompiler):
         cls, model: InterfaceModel, out_dir: Path, out_dir_relative_to: Path
     ) -> None:
         def create_service_stub():
-            """ "
-            Service will be implemented by
-            server to handle incoming RPCs
+            """
+            Service stub is implemented by server to handle 
+            incoming RPCs
             """
 
             code = ""
@@ -115,7 +115,9 @@ class JavaCompiler(BaseCompiler):
             (out_dir / f"{model.name}.java").write_text(code)
 
         def create_client_stub():
-            """ "Stub will be called by client to make RPCs"""
+            """
+            Stub will be called by client to make RPCs
+            """
 
             code = ""
             if out_dir != out_dir_relative_to:
