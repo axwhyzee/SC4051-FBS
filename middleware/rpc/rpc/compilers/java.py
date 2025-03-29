@@ -95,7 +95,7 @@ class JavaCompiler(BaseCompiler):
     ) -> None:
         def create_service_stub():
             """
-            Service stub is implemented by server to handle 
+            Service stub is implemented by server to handle
             incoming RPCs
             """
 

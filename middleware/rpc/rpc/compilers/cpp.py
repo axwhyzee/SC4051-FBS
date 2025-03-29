@@ -90,7 +90,7 @@ class CPPCompiler(BaseCompiler):
     ) -> None:
         def create_service_stub() -> str:
             """
-            Service stub is implemented by server to handle 
+            Service stub is implemented by server to handle
             incoming RPCs
             """
 
@@ -135,7 +135,6 @@ class CPPCompiler(BaseCompiler):
             f.write(create_service_stub())
             f.write(create_client_stub())
 
-
     @classmethod
     def compile(
         cls, in_file: Path, out_dir: Path, out_dir_relative_to: Path
@@ -144,5 +143,5 @@ class CPPCompiler(BaseCompiler):
         with open(Path(out_dir / TYPES_FILE), "w") as f:
             f.write("#include <string>\n#include <vector>\n\n")
         with open(Path(out_dir / STUBS_FILE), "w") as f:
-            f.write("#include \"proto_types.h\"\n\n")
+            f.write('#include "proto_types.h"\n\n')
         super().compile(in_file, out_dir, out_dir_relative_to)
