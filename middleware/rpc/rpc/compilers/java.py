@@ -50,10 +50,10 @@ class JavaCompiler(BaseCompiler):
         ```
         // shapes/Cube.java
         package shapes;
+        
         public record Cube(
             int height,
-            int width,
-            int depth
+            int width
         ) {}
         ```
         """
