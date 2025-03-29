@@ -19,11 +19,3 @@ class DType(str, Enum):
     BOOL = "bool"
     FLOAT = "float"
     SEQUENCE = "sequence"
-
-
-JAVA_DTYPES: Dict[str, str] = {
-    DType.STRING.value: "String",
-    DType.INT.value: "int",
-    DType.BOOL.value: "boolean",
-    DType.FLOAT.value: "float",
-}
