@@ -2,9 +2,9 @@
 
 Language-agnostic command line tool to compile interface file into language specific header files to faciliate socket programm via generated stubs. Stubs also ensure reliable network protocol built on top of UDP.
 
-~Run all commands from the SC4051-FBS/rpc directory~
+## Quickstart
 
-## Middleware Quickstart
+_Note: Run all commands from the `SC4051-FBS/middleware/rpc` directory_
 
 ### Install RPC tools
 ```
@@ -14,7 +14,7 @@ source env/bin/activate
 pip install .  # installs rpc package
 ```
 
-### Compile Header Files for Messages
+### Compile Interface File into Stubs
 
 #### C++
 
