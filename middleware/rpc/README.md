@@ -2,6 +2,10 @@
 
 Language-agnostic command line tool to compile interface file into language specific header files to faciliate socket programm via generated stubs. Stubs also ensure reliable network protocol built on top of UDP.
 
+## How It Works
+
+A parser generates logical models of interface components from the interface file. Next, language-specific compilers, build these components part by part to generate RPC stubs.
+
 ## Quickstart
 
 _Note: Run all commands from the `SC4051-FBS/middleware/rpc` directory_
