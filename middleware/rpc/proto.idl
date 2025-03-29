@@ -19,17 +19,6 @@ struct Interval {
     DayTime end;
 }
 
-
-struct AvailabilityResponse {
-    string error;
-    sequence<Interval> availability;
-}
-
-struct BookResponse {
-    string error;
-    int bookingId;
-}
-
 struct Booking {
     string user;
     DayTime start;
@@ -41,6 +30,20 @@ struct Facility {
     string type;           
     sequence<Booking> bookings; 
 };
+
+struct Response {
+    string error;
+}
+
+struct AvailabilityResponse {
+    string error;
+    sequence<Interval> availability;
+}
+
+struct BookResponse {
+    string error;
+    int bookingId;
+}
 
 struct FacilitiesResponse {
     string error;
