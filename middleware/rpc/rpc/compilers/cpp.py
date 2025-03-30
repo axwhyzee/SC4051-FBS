@@ -147,8 +147,8 @@ class CPPCompiler(BaseCompiler):
         def create_type():
             code = f"enum {model.name} {{\n"
             for i, key in enumerate(model.keys, start=1):
-                code += f"{key}={i},\n"
-            code += "\n};\n\n"
+                code += f"\t{key}={i},\n"
+            code += "};\n\n"
             with open(out_dir / TYPES_FILE, "a") as f:
                 f.write(code)
 
