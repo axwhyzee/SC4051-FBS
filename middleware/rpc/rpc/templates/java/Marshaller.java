@@ -1,5 +1,3 @@
-package {__PACKAGE__};
-
 public class Marshaller {
 
     public static void _marshall_len_header(byte[] message, int[] i, int len) {

@@ -1,5 +1,3 @@
-package {__PACKAGE__};
-
 public class Unmarshaller {
 
     public static int unmarshall_int(byte[] message, int[] i) {

@@ -79,13 +79,13 @@ class CPPCompiler(BaseCompiler):
 
             for attr in model.attrs:
                 attr_type = attr.type
-                translated_attr_type = _translate_attr_type(attr.type)
+                translated_type = _translate_attr_type(attr.type)
 
                 if is_sequence(attr_type):
                     # iteratively marshall sequence items
                     nested_type = get_nested_type(attr_type)
                     code += f"\tint {attr.name}__len = unmarshall_int(message, i);\n"
-                    code += f"\t{translated_attr_type} temp__{attr.name} = {translated_attr_type}();\n"
+                    code += f"\t{translated_type} temp__{attr.name} = {translated_type}();\n"
                     code += f"\tfor (int j=0; j<{attr.name}__len; j++)\n"
                     code += f"\t\ttemp__{attr.name}.push_back(unmarshall_{nested_type}(message, i));\n"
                     code += f"\t{model.name}__struct.{attr.name} = temp__{attr.name};\n"
