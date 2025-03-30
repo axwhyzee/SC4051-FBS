@@ -22,6 +22,7 @@ JAVA_DTYPES: Dict[str, str] = {
 
 MARSHALLER_FILE = "Marshaller.java"
 UNMARSHALLER_FILE = "Unmarshaller.java"
+SERVICER_FILE = "_Servicer.java"
 
 
 _translate_attr = partial(translate_attr, dtypes=JAVA_DTYPES)
@@ -58,11 +59,7 @@ class JavaCompiler(BaseCompiler):
         """
 
         def create_record():
-            package = out_dir.relative_to(root_dir)
-            code = ""
-            if out_dir != root_dir:
-                code += f"package {package};\n\n"
-            code += f"public record {model.name}(\n"
+            code = f"public record {model.name}(\n"
             code += ",\n".join(
                 map(lambda attr: f"\t{_translate_attr(attr)}", model.attrs)
             )
@@ -129,11 +126,7 @@ class JavaCompiler(BaseCompiler):
             }
             ```
             """
-            package = out_dir.relative_to(root_dir)
-            code = ""
-            if out_dir != root_dir:
-                code += f"package {package};\n\n"
-            code += f"public enum {model.name} {{\n"
+            code = f"public enum {model.name} {{\n"
             code += f",\n".join(map(lambda key: f"\t{key}", model.keys))
             code += ";\n}"
             (out_dir / f"{model.name}.java").write_text(code)
@@ -174,12 +167,7 @@ class JavaCompiler(BaseCompiler):
             Service stub is implemented by server to handle
             incoming RPCs
             """
-
-            code = ""
-            if out_dir != root_dir:
-                code += f"package {package};\n\n"
-            code += f"public interface {model.name} {{\n"
-
+            code = f"public interface {model.name} {{\n"
             for method in model.methods:
                 code += f"\t{method.ret_type} "
                 code += f"{method.name}("
@@ -190,16 +178,57 @@ class JavaCompiler(BaseCompiler):
             code += "}"
             (out_dir / f"{model.name}.java").write_text(code)
 
+        def create_servicer():
+            '''
+            case 1:
+                String facilityName__arg = Unmarshaller.unmarshall_string(message, i);
+                int days__arg__len = Unmarshaller.unmarshall_int(message, i);
+                Day[] days__arg = new Day[days__arg__len];
+
+                for (int j=0; j<days__arg__len; j++) {
+                    days__arg[j] = Unmarshaller.unmarshall_Day(message, i);
+                }
+                AvailabilityResponse result = this.service.queryFacility(facilityName__arg, days__arg);
+                Marshaller.marshall_AvailabilityResponse(response, i, result);
+                return i[0];
+            '''
+            dispatch_code = "\n"
+            for i, method in enumerate(model.methods, start=1):
+                dispatch_code += f"\t\t\tcase {i}:\n"
+                arg_names = []
+
+                for arg in method.args:
+                    arg_name = f"{arg.name}__{i}__arg"
+                    arg_names.append(arg_name)
+                    translated_type = _translate_attr_type(arg.type)
+
+                    if is_sequence(arg.type):
+                        nested_type = get_nested_type(arg.type)
+                        dispatch_code += f"\t\t\t\tint {arg_name}__len = Unmarshaller.unmarshall_int(message, i);\n"
+                        dispatch_code += f"\t\t\t\t{translated_type} {arg_name} = new {nested_type}[{arg_name}__len];\n"
+                        dispatch_code += f"\t\t\t\tfor (int j=0; j<{arg_name}__len; j++)\n"
+                        dispatch_code += f"\t\t\t\t\t{arg_name}[j] = Unmarshaller.unmarshall_{nested_type}(message, i);\n"
+                    else:
+                        dispatch_code += f"\t\t\t\t{translated_type} {arg_name} = Unmarshaller.unmarshall_{arg.type}(message, i);\n"
+                dispatch_code += f'\t\t\t\t{method.ret_type} {method.name}__result = this.service.{method.name}({", ".join(arg_names)});\n'
+                dispatch_code += f"\t\t\t\tMarshaller.marshall_{method.ret_type}(response, i, {method.name}__result);\n"
+                dispatch_code += "\t\t\t\treturn i[0];\n"
+
+            dispatch_code += "\t\t\tdefault:\n"
+            dispatch_code += "\t\t\t\tthrow new Exception(\"Unexpected method ID: \" + method_id);"
+
+            (out_dir / f"{model.name}Servicer.java").write_text(
+                (Path("templates/java") / SERVICER_FILE).read_text()
+                .replace("{__SERVICE_NAME__}", model.name)
+                .replace("{__DISPATCH_CODE__}", dispatch_code)
+            )
+
+
         def create_client_stub():
             """
             Stub will be called by client to make RPCs
             """
-
-            code = ""
-            if out_dir != root_dir:
-                code += f"package {package};\n\n"
-            code += f"public class {model.name}Stub {{\n"
-
+            code = f"public class {model.name}Stub {{\n"
             for method in model.methods:
                 code += f"\t{method.ret_type} "
                 code += f"{method.name}("
@@ -212,8 +241,8 @@ class JavaCompiler(BaseCompiler):
             code += "}"
             (out_dir / f"{model.name}Stub.java").write_text(code)
 
-        package = out_dir.relative_to(root_dir)
         create_service_stub()
+        create_servicer()
         create_client_stub()
 
     @classmethod
@@ -224,9 +253,15 @@ class JavaCompiler(BaseCompiler):
                 (out_dir / file.name).write_text(file.read_text())
         super().compile(in_file, out_dir, root_dir)
 
-        # set package and close off class body
+        # close off class body
         for file in (MARSHALLER_FILE, UNMARSHALLER_FILE):
-            text = (out_dir / file).read_text().replace(
-                "{__PACKAGE__}", str(out_dir.relative_to(root_dir))
-            ) + "}"
-            (out_dir / file).write_text(text)
+            with open(out_dir / file, "a") as f:
+                f.write("}")
+
+        # set package
+        if out_dir != root_dir:
+            for file in out_dir.iterdir():
+                file.write_text(
+                    f"package {out_dir.relative_to(root_dir)};\n\n"
+                    + file.read_text()
+                )
