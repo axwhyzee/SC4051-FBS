@@ -232,7 +232,7 @@ class CPPCompiler(BaseCompiler):
             code = ""
             code += f"class {model.name}Stub {{\n"
             code += "public:\n"
-            code += f"\t{model.name}Stub();\n"
+            code += f"\t{model.name}Stub() ();\n"
             code += f"\t~{model.name}Stub() {{}};\n"
 
             for method in model.methods:
