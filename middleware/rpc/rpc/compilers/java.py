@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict
 
 from .base import BaseCompiler
-from .common import TAB, translate_attr
+from .common import translate_attr
 from .model import EnumModel, InterfaceModel, StructModel
 from .typings import DType
 
@@ -53,7 +53,7 @@ class JavaCompiler(BaseCompiler):
             code += f"package {package};\n\n"
         code += f"public record {model.name}(\n"
         code += ",\n".join(
-            map(lambda attr: f"{TAB}{_translate_attr(attr)}", model.attrs)
+            map(lambda attr: f"\t{_translate_attr(attr)}", model.attrs)
         )
         code += "\n)"
         (out_dir / f"{model.name}.java").write_text(code)
@@ -85,7 +85,7 @@ class JavaCompiler(BaseCompiler):
         if out_dir != out_dir_relative_to:
             code += f"package {package};\n\n"
         code += f"public enum {model.name} {{\n"
-        code += f",\n".join(map(lambda key: f"{TAB}{key}", model.keys))
+        code += f",\n".join(map(lambda key: f"\t{key}", model.keys))
         code += ";\n}"
         (out_dir / f"{model.name}.java").write_text(code)
 
@@ -105,7 +105,7 @@ class JavaCompiler(BaseCompiler):
             code += f"public interface {model.name} {{\n"
 
             for method in model.methods:
-                code += f"{TAB}{method.ret_type} "
+                code += f"\t{method.ret_type} "
                 code += f"{method.name}("
                 code += ", ".join(
                     [_translate_attr(attr) for attr in method.args]
@@ -125,7 +125,7 @@ class JavaCompiler(BaseCompiler):
             code += f"public class {model.name}Stub {{\n"
 
             for method in model.methods:
-                code += f"{TAB}{method.ret_type} "
+                code += f"\t{method.ret_type} "
                 code += f"{method.name}("
                 code += ", ".join(
                     [_translate_attr(attr) for attr in method.args]

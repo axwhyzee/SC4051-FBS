@@ -3,8 +3,6 @@ from typing import Dict
 from .model import Attribute
 from .typings import DType
 
-TAB = " " * 4
-
 
 def translate_attr(attr: Attribute, dtypes: Dict[str, str]) -> str:
     """
