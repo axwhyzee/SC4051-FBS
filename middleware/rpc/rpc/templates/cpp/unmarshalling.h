@@ -2,13 +2,13 @@
 
 #define BYTE 8
 #define LEN_SIZE 4
+#define INT_SIZE 4
 #define RAISE exit(EXIT_FAILURE)
-
 #pragma once
 
-int unmarshall_int(char* message, int& i, int len) {
+int unmarshall_int(char* message, int& i) {
     int res = 0;
-    for (int j=0; j<len; j++) {
+    for (int j=0; j<INT_SIZE; j++) {
         res <<= BYTE;
         res |= message[i+j];
     }

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict
 
 from .base import BaseCompiler
-from .common import TAB, translate_attr
+from .common import translate_attr
 from .model import EnumModel, InterfaceModel, StructModel
 from .typings import DType
 
@@ -22,6 +22,13 @@ CPP_DTYPES: Dict[str, str] = {
 }
 
 _translate_attr = partial(translate_attr, dtypes=CPP_DTYPES)
+
+
+def _get_nested_type(attr_type: str):
+    return attr_type.rstrip(">").split("<", 1)[1]
+
+def _is_variable_length(attr_type: str):
+    return attr_type == DType.STRING or attr_type.startswith(DType.SEQUENCE.value)
 
 
 class CPPCompiler(BaseCompiler):
@@ -58,39 +65,63 @@ class CPPCompiler(BaseCompiler):
         def create_type():
             code = f"struct {model.name} {{\n"
             code += f";\n".join(
-                map(lambda key: f"{TAB}{_translate_attr(key)}", model.attrs)
+                map(lambda key: f"\t{_translate_attr(key)}", model.attrs)
             )
             code += ";\n};\n\n"
             with open(out_dir / TYPES_FILE, "a") as f:
                 f.write(code)
 
         def create_unmarshalling():
-            code = f"{model.name} unmarshall_{model.name}(char* message, int& i, int len) {{\n"
-            code += f"{TAB}int attr_len;\n"
-            code += f"{TAB}{model.name} {model.name}_struct;\n"
+            code = f"{model.name} unmarshall_{model.name}(char* message, int& i) {{\n"
+            code += f"\tint attr_len;\n"
+            code += f"\t{model.name} {model.name}_struct;\n"
 
             for attr in model.attrs:
-                code += f"{TAB}attr_len = unmarshall_int(message, i, LEN_SIZE);\n"
                 attr_type = attr.type
-                
-                if attr_type.startswith("sequence"):
-                    # vector<...>
-                    nested_type = attr_type.rstrip(">").split("sequence<", 1)[1]
-                    code += f"{TAB}std::vector<{nested_type}> temp_{attr.name} = std::vector<{nested_type}>();\n"
-                    code += f"{TAB}for (int j=0; j<attr_len; j++) {{\n"
-                    code += f"{TAB*2}temp_{attr.name}.push_back(unmarshall_{nested_type}(message, i, attr_len));\n"
-                    code += f"{TAB}}}\n"
-                    code += f"{TAB}{model.name}_struct.{attr.name} = temp_{attr.name};\n"
+
+                # variable-length types require knowledge of var length
+                if _is_variable_length(attr_type):
+                    code += f"\tattr_len = unmarshall_int(message, i);\n"      
+
+                if attr_type == DType.STRING:
+                    # strings have variable length
+                    code += f"\t{model.name}_struct.{attr.name} = unmarshall_{attr_type}(message, i, attr_len);\n"   
+                elif attr_type.startswith(DType.SEQUENCE.value):
+                    # iteratively marshall sequence items
+                    nested_type = _get_nested_type(attr_type)
+                    code += f"\tstd::vector<{nested_type}> temp_{attr.name} = std::vector<{nested_type}>();\n"
+                    code += f"\tfor (int j=0; j<attr_len; j++)\n"
+                    code += f"\t\ttemp_{attr.name}.push_back(unmarshall_{nested_type}(message, i));\n"
+                    code += f"\t{model.name}_struct.{attr.name} = temp_{attr.name};\n"
                 else:
-                    # structs and primitives
-                    code += f"{TAB}{model.name}_struct.{attr.name} = unmarshall_{attr_type}(message, i, attr_len);\n"         
+                    # structs and fixed-length primitives
+                    code += f"\t{model.name}_struct.{attr.name} = unmarshall_{attr_type}(message, i);\n"         
             
-            code += f"{TAB}return {model.name}_struct;\n"
+            code += f"\treturn {model.name}_struct;\n"
             code += "}\n\n"
             with open(out_dir / UNMARSHALLING_FILE, "a") as f:
                 f.write(code)
 
+        def create_marshalling():
+            code = f"{model.name} marshall_{model.name}(char* message, int& i, {model.name} val) {{\n"
+            for attr in model.attrs:                
+                if attr.type.startswith(DType.SEQUENCE.value):
+                    # sequences
+                    nested_type = _get_nested_type(attr.type)
+                    code += f"\t_marshall_len_header(message, i, val.{attr.name}.size());\n"
+                    code += f"\tfor (int j=0; j<val.{attr.name}.size(); j++)\n"
+                    code += f"\t\tmarshall_{nested_type}(message, i, val.{attr.name}[j]);\n"
+                else:
+                    # non-sequences
+                    if attr.type == DType.STRING:
+                        code += f"\t_marshall_len_header(message, i, val.{attr.name}.length());\n"
+                    code += f"\tmarshall_{attr.type}(message, i, val.{attr.name});\n"
+            code += "}\n\n"
+            with open(out_dir / MARSHALLING_FILE, "a") as f:
+                f.write(code)
+
         create_type()
+        create_marshalling()
         create_unmarshalling()
 
 
@@ -110,35 +141,45 @@ class CPPCompiler(BaseCompiler):
         ```
         // proto_types.h
         enum Color {
-            RED,
-            BLUE,
-            GREEN
+            RED=1,
+            BLUE=2,
+            GREEN=3
         };
         ```
         """
 
         def create_type():
             code = f"enum {model.name} {{\n"
-            code += f",\n".join(map(lambda key: f"{TAB}{key}", model.keys))
+            for i, key in enumerate(model.keys, start=1):
+                code += f"{key}={i},\n"
             code += "\n};\n\n"
             with open(out_dir / TYPES_FILE, "a") as f:
                 f.write(code)
 
         def create_unmarshalling():
-            code = f"{model.name} unmarshall_{model.name}(char* message, int& i, int len) {{\n"
-            code += f"{TAB}char enum_id = message[i];\n"
-            code += f"{TAB}switch (enum_id) {{\n"
+            code = f"{model.name} unmarshall_{model.name}(char* message, int& i) {{\n"
+            code += f"\tchar enum_id = message[i];\n"
+            code += f"\tswitch (enum_id) {{\n"
             
             for i, key in enumerate(model.keys, start=1):
-                code += f"{TAB*2}case {i}:\n"
-                code += f"{TAB*3}return ({model.name}) {key};\n"
-            code += f"{TAB}}}\n"
+                code += f"\t\tcase {i}:\n"
+                code += f"\t\t\treturn ({model.name}) {key};\n"
+            code += f"\t}}\n"
             code += "}\n\n"
             with open(out_dir / UNMARSHALLING_FILE, "a") as f:
                 f.write(code)
 
+
+        def create_marshalling():
+            code = f"void marshall_{model.name}(char* message, int& i, {model.name} val) {{\n"
+            code += "\tmarshall_int(message, i, (int)val);\n"
+            code += "}\n\n"
+            with open(out_dir / MARSHALLING_FILE, "a") as f:
+                f.write(code)
+
         create_type()
         create_unmarshalling()
+        create_marshalling()
 
 
     @classmethod
@@ -153,10 +194,10 @@ class CPPCompiler(BaseCompiler):
 
             code = f"class {model.name} {{\n"
             code += "public:\n"
-            code += f"{TAB}virtual ~{model.name}() {{}};\n"
+            code += f"\tvirtual ~{model.name}() {{}};\n"
 
             for method in model.methods:
-                code += f"{TAB}virtual {method.ret_type} "
+                code += f"\tvirtual {method.ret_type} "
                 code += f"{method.name}("
                 code += ", ".join(
                     [_translate_attr(attr) for attr in method.args]
@@ -173,11 +214,11 @@ class CPPCompiler(BaseCompiler):
             code = ""
             code += f"class {model.name}Stub {{\n"
             code += "public:\n"
-            code += f"{TAB}{model.name}Stub();\n"
-            code += f"{TAB}~{model.name}Stub() {{}};\n"
+            code += f"\t{model.name}Stub();\n"
+            code += f"\t~{model.name}Stub() {{}};\n"
 
             for method in model.methods:
-                code += f"{TAB}{method.ret_type} "
+                code += f"\t{method.ret_type} "
                 code += f"{method.name}("
                 code += ", ".join(
                     [_translate_attr(attr) for attr in method.args]
