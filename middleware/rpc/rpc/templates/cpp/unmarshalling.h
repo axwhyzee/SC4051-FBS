@@ -16,8 +16,9 @@ int unmarshall_int(char* message, int& i) {
     return res;
 }
 
-std::string unmarshall_string(char* message, int& i, int len) {
+std::string unmarshall_string(char* message, int& i) {
     std::string res;
+    int len = unmarshall_int(message, i);
     res.assign(&message[i], len);
     i+=len;
     return res;
