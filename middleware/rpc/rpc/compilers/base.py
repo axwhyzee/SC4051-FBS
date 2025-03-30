@@ -20,35 +20,33 @@ class BaseCompiler(ABC):
     @classmethod
     @abstractmethod
     def _handle_struct(
-        cls, model: StructModel, out_dir: Path, out_dir_relative_to: Path
+        cls, model: StructModel, out_dir: Path, root_dir: Path
     ) -> None:
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
     def _handle_enum(
-        cls, model: EnumModel, out_dir: Path, out_dir_relative_to: Path
+        cls, model: EnumModel, out_dir: Path, root_dir: Path
     ) -> None:
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
     def _handle_interface(
-        cls, model: InterfaceModel, out_dir: Path, out_dir_relative_to: Path
+        cls, model: InterfaceModel, out_dir: Path, root_dir: Path
     ) -> None:
         raise NotImplementedError
 
     @classmethod
-    def compile(
-        cls, in_file: Path, out_dir: Path, out_dir_relative_to: Path
-    ) -> None:
+    def compile(cls, in_file: Path, out_dir: Path, root_dir: Path) -> None:
         callbacks = {
             block: cast(
                 Callable[[BlockModel], None],
                 partial(
                     handler,
                     out_dir=out_dir,
-                    out_dir_relative_to=out_dir_relative_to,
+                    root_dir=root_dir,
                 ),
             )
             for block, handler in (
