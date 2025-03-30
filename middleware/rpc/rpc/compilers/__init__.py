@@ -1,8 +1,8 @@
 """
 Compilers take in an interface file and generate language-specific
-stubs. 
+stubs.
 
-RPC messages are sent as bytestreams, so the compilers generate 
+RPC messages are sent as bytestreams, so the compilers generate
 language-specific marshalling and unmarshalling functions as well
 to serialize objects into bytes and vice versa from the bytestream.
 

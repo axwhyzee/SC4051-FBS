@@ -3,7 +3,12 @@ from pathlib import Path
 from typing import Dict
 
 from .base import BaseCompiler
-from .common import translate_attr, translate_attr_type, is_sequence, get_nested_type
+from .common import (
+    get_nested_type,
+    is_sequence,
+    translate_attr,
+    translate_attr_type,
+)
 from .model import EnumModel, InterfaceModel, StructModel
 from .typings import DType
 

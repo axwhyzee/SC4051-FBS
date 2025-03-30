@@ -3,7 +3,12 @@ from pathlib import Path
 from typing import Dict
 
 from .base import BaseCompiler
-from .common import translate_attr, translate_attr_type, is_sequence, get_nested_type
+from .common import (
+    get_nested_type,
+    is_sequence,
+    translate_attr,
+    translate_attr_type,
+)
 from .model import EnumModel, InterfaceModel, StructModel
 from .typings import DType
 
@@ -51,6 +56,7 @@ class JavaCompiler(BaseCompiler):
         ) {}
         ```
         """
+
         def create_record():
             package = out_dir.relative_to(root_dir)
             code = ""
@@ -77,7 +83,7 @@ class JavaCompiler(BaseCompiler):
             with open(out_dir / MARSHALLER_FILE, "a") as f:
                 f.write(code)
 
-        def create_unmarshaller(): 
+        def create_unmarshaller():
             code = f"\tpublic static {model.name} unmarshall_{model.name}(byte[] message, int[] i) {{\n"
             arg_names = []
             for attr in model.attrs:
@@ -143,7 +149,7 @@ class JavaCompiler(BaseCompiler):
             code = f"\tpublic static {model.name} unmarshall_{model.name}(byte[] message, int[] i) throws EnumConstantNotPresentException {{\n"
             code += "\t\tint enum_id = unmarshall_int(message, i);\n"
             code += "\t\tswitch (enum_id) {\n"
-            
+
             for i, key in enumerate(model.keys, start=1):
                 code += f"\t\t\tcase {i}:\n"
                 code += f"\t\t\t\treturn {model.name}.{key};\n"
@@ -220,10 +226,7 @@ class JavaCompiler(BaseCompiler):
 
         # set package and close off class body
         for file in (MARSHALLER_FILE, UNMARSHALLER_FILE):
-            text = (
-                (out_dir / file)
-                .read_text()
-                .replace("{__PACKAGE__}", str(out_dir.relative_to(root_dir)))
-                + "}"
-            )
+            text = (out_dir / file).read_text().replace(
+                "{__PACKAGE__}", str(out_dir.relative_to(root_dir))
+            ) + "}"
             (out_dir / file).write_text(text)
