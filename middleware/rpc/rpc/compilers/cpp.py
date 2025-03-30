@@ -73,24 +73,17 @@ class CPPCompiler(BaseCompiler):
 
         def create_unmarshalling():
             code = f"{model.name} unmarshall_{model.name}(char* message, int& i) {{\n"
-            code += f"\tint attr_len;\n"
             code += f"\t{model.name} {model.name}_struct;\n"
 
             for attr in model.attrs:
                 attr_type = attr.type
 
-                # variable-length types require knowledge of var length
-                if _is_variable_length(attr_type):
-                    code += f"\tattr_len = unmarshall_int(message, i);\n"      
-
-                if attr_type == DType.STRING:
-                    # strings have variable length
-                    code += f"\t{model.name}_struct.{attr.name} = unmarshall_{attr_type}(message, i, attr_len);\n"   
-                elif attr_type.startswith(DType.SEQUENCE.value):
+                if attr_type.startswith(DType.SEQUENCE.value):
                     # iteratively marshall sequence items
                     nested_type = _get_nested_type(attr_type)
+                    code += f"\tint {attr.name}_len = unmarshall_int(message, i);\n"
                     code += f"\tstd::vector<{nested_type}> temp_{attr.name} = std::vector<{nested_type}>();\n"
-                    code += f"\tfor (int j=0; j<attr_len; j++)\n"
+                    code += f"\tfor (int j=0; j<{attr.name}_len; j++)\n"
                     code += f"\t\ttemp_{attr.name}.push_back(unmarshall_{nested_type}(message, i));\n"
                     code += f"\t{model.name}_struct.{attr.name} = temp_{attr.name};\n"
                 else:
