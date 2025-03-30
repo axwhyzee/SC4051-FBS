@@ -12,6 +12,7 @@ def translate_attr_type(typ: str, dtypes: Dict[str, str]) -> str:
         typ = dtypes[DType.SEQUENCE.value].format(type=typ)
     return typ
 
+
 def translate_attr(attr: Attribute, dtypes: Dict[str, str]) -> str:
     """
     Translate logical model of an attribute

@@ -12,9 +12,9 @@ parenthesis represent length of field in bytes.
                   +------------------+----------------+
 ```
 
-- Structs are flattened according to the order by which the attributes 
+- Structs are flattened according to the order by which the attributes
   are defined in the interface file.
-- Only variable-length types like strings and sequences have ARG_LEN 
+- Only variable-length types like strings and sequences have ARG_LEN
   headers.
 - Responses use the same METHOD_ID as that in the request.
 """
@@ -51,6 +51,7 @@ _translate_attr_type = partial(translate_attr_type, dtypes=CPP_DTYPES)
 def _get_nested_type(attr_type: str):
     return attr_type.rstrip(">").split("<", 1)[1]
 
+
 def _is_sequence(attr_type: str):
     return attr_type.startswith(DType.SEQUENCE.value)
 
@@ -86,6 +87,7 @@ class CPPCompiler(BaseCompiler):
         void marshall_Cube(char* message, int& i) {...}
         ```
         """
+
         def create_type():
             code = f"struct {model.name} {{\n"
             code += f";\n".join(
@@ -113,8 +115,8 @@ class CPPCompiler(BaseCompiler):
                     code += f"\t{model.name}_struct.{attr.name} = temp_{attr.name};\n"
                 else:
                     # structs and fixed-length primitives
-                    code += f"\t{model.name}_struct.{attr.name} = unmarshall_{attr_type}(message, i);\n"         
-            
+                    code += f"\t{model.name}_struct.{attr.name} = unmarshall_{attr_type}(message, i);\n"
+
             code += f"\treturn {model.name}_struct;\n"
             code += "}\n\n"
             with open(out_dir / UNMARSHALLING_FILE, "a") as f:
@@ -122,7 +124,7 @@ class CPPCompiler(BaseCompiler):
 
         def create_marshalling():
             code = f"{model.name} marshall_{model.name}(char* message, int& i, {model.name} val) {{\n"
-            for attr in model.attrs:                
+            for attr in model.attrs:
                 if _is_sequence(attr.type):
                     # sequences
                     nested_type = _get_nested_type(attr.type)
@@ -141,7 +143,6 @@ class CPPCompiler(BaseCompiler):
         create_type()
         create_marshalling()
         create_unmarshalling()
-
 
     @classmethod
     def _handle_enum(
@@ -178,7 +179,7 @@ class CPPCompiler(BaseCompiler):
             code = f"{model.name} unmarshall_{model.name}(char* message, int& i) {{\n"
             code += f"\tchar enum_id = message[i];\n"
             code += f"\tswitch (enum_id) {{\n"
-            
+
             for i, key in enumerate(model.keys, start=1):
                 code += f"\t\tcase {i}:\n"
                 code += f"\t\t\treturn ({model.name}) {key};\n"
@@ -186,7 +187,6 @@ class CPPCompiler(BaseCompiler):
             code += "}\n\n"
             with open(out_dir / UNMARSHALLING_FILE, "a") as f:
                 f.write(code)
-
 
         def create_marshalling():
             code = f"void marshall_{model.name}(char* message, int& i, {model.name} val) {{\n"
@@ -198,7 +198,6 @@ class CPPCompiler(BaseCompiler):
         create_type()
         create_unmarshalling()
         create_marshalling()
-
 
     @classmethod
     def _handle_interface(
@@ -246,7 +245,7 @@ class CPPCompiler(BaseCompiler):
                 )
             code += "};\n\n"
             return code
-        
+
         def create_servicer() -> str:
             dispatch_code = "\n"
             for i, method in enumerate(model.methods, start=1):
@@ -259,7 +258,9 @@ class CPPCompiler(BaseCompiler):
                         nested_type = _get_nested_type(arg.type)
                         dispatch_code += f"\t\t\t\t{translated_arg_type} {arg_name} = {translated_arg_type}();\n"
                         dispatch_code += f"\t\t\t\tint {arg_name}_len = unmarshall_int(message, i);\n"
-                        dispatch_code += f"\t\t\t\tfor (int j=0; j<{arg_name}_len; j++)\n"
+                        dispatch_code += (
+                            f"\t\t\t\tfor (int j=0; j<{arg_name}_len; j++)\n"
+                        )
                         dispatch_code += f"\t\t\t\t\t{arg_name}.push_back(unmarshall_{nested_type}(message, i));\n"
                     else:
                         dispatch_code += f"\t\t\t\t{translated_arg_type} {arg_name} = unmarshall_{arg.type}(message, i);\n"
@@ -272,7 +273,7 @@ class CPPCompiler(BaseCompiler):
 
             dispatch_code += "\t\t\tdefault:\n"
             dispatch_code += "\t\t\t\tRAISE;"
-            
+
             with open(out_dir / STUBS_CPP_FILE, "a") as f:
                 f.write(
                     (Path("templates/cpp/") / SERVICER_FILE)
@@ -293,5 +294,5 @@ class CPPCompiler(BaseCompiler):
         # copy templates
         for file in Path("templates/cpp").iterdir():
             if file.suffix in (".h", ".cpp") and not file.stem.startswith("_"):
-                (out_dir / file.name).write_text(file.read_text())        
+                (out_dir / file.name).write_text(file.read_text())
         super().compile(in_file, out_dir, out_dir_relative_to)
