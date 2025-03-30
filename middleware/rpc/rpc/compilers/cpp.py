@@ -12,8 +12,8 @@ parenthesis represent length of field in bytes.
                   +------------------+----------------+
 ```
 
-- Structs are flattened according to the order by which the attributes are
-  defined in the interface file.
+- Structs are flattened according to the order by which the attributes 
+  are defined in the interface file.
 - Only variable-length types like strings and sequences have ARG_LEN 
   headers.
 - Responses use the same METHOD_ID as that in the request.
@@ -101,12 +101,13 @@ class CPPCompiler(BaseCompiler):
 
             for attr in model.attrs:
                 attr_type = attr.type
+                translated_attr_type = _translate_attr_type(attr.type)
 
                 if _is_sequence(attr_type):
                     # iteratively marshall sequence items
                     nested_type = _get_nested_type(attr_type)
                     code += f"\tint {attr.name}_len = unmarshall_int(message, i);\n"
-                    code += f"\tstd::vector<{nested_type}> temp_{attr.name} = std::vector<{nested_type}>();\n"
+                    code += f"\t{translated_attr_type} temp_{attr.name} = {translated_attr_type}();\n"
                     code += f"\tfor (int j=0; j<{attr.name}_len; j++)\n"
                     code += f"\t\ttemp_{attr.name}.push_back(unmarshall_{nested_type}(message, i));\n"
                     code += f"\t{model.name}_struct.{attr.name} = temp_{attr.name};\n"
@@ -247,23 +248,6 @@ class CPPCompiler(BaseCompiler):
             return code
         
         def create_servicer() -> str:
-            '''
-            char* dispatch(char* message, int n) {
-                int i = 0;
-                char arg_id;
-                unsigned method_id = message[i++];
-                
-                switch (method_id) {
-                    case 1:
-                        std::string facilityName = unmarshall_string(message, i);
-                        std::vector<Day> days = std::vector<Day>();
-                        AvailabilityResponse res = service.queryFacility(facilityName, days);
-                        break;
-                    case 2:
-                        break;
-                }
-            }
-            '''
             dispatch_code = "\n"
             for i, method in enumerate(model.methods, start=1):
                 dispatch_code += f"\t\t\tcase {i}: {{\n"
