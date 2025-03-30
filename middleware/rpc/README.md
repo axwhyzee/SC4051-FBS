@@ -27,6 +27,7 @@ mkdir ../client
 mkdir ../client/protos
 source env/bin/activate
 rpc_tools --infile=proto.idl --outdir=../../server/protos --rootdir=../../server --lang=cpp
+# check outdir for generated stubs
 ```
 
 #### Java
@@ -36,6 +37,7 @@ mkdir ../client
 mkdir ../client/protos
 source env/bin/activate
 rpc_tools --infile=proto.idl --outdir=../../client/protos --rootdir=../../client --lang=java
+# check outdir for generated stubs
 ```
 
 rpc_tools --infile=proto.idl --outdir=./protos --rootdir=. --lang=cpp
