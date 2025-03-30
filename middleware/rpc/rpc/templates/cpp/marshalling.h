@@ -10,11 +10,11 @@
  * parenthesis represent length of field in bytes.
  * 
  * 
- * +------------------+---------------+------------------+----------------+
- * |  MESSAGE_ID (1)  |  ARG1_ID (1)  |  ARG1_LEN (0/4)  |  ARG1_VAL (N)  |
- * +------------------+---------------+------------------+----------------+ 
- *                    |           ... repeat for other args ...           |
- *                    +---------------+------------------+----------------+
+ * +------------------+------------------+----------------+
+ * |  MESSAGE_ID (4)  |  ARG1_LEN (0|4)  |  ARG1_VAL (N)  |
+ * +------------------+------------------+----------------+
+ *                    |    ... repeat for other args ...  |
+ *                    +------------------+----------------+
  * 
  * - Structs are flattened according to the order by which the attributes are
  *   defined in the interface file.
