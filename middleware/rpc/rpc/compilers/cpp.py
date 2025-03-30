@@ -9,6 +9,8 @@ from .typings import DType
 
 TYPES_FILE = "proto_types.h"
 STUBS_FILE = "stubs.h"
+MARSHALLING_FILE = "marshalling.h"
+UNMARSHALLING_FILE = "unmarshalling.h"
 
 
 CPP_DTYPES: Dict[str, str] = {
@@ -40,21 +42,57 @@ class CPPCompiler(BaseCompiler):
         Translates into ...
 
         ```
-        // stubs.h
-
+        // proto_types.h
         struct Cube {
             int height;
             int width;
         };
+
+        // unmarshalling.h
+        Cube unmarshall_Cube(char* message, int& i, int len) {...}
+
+        // marshalling.h
+        void marshall_Cube(char* message, int& i) {...}
         ```
         """
-        code = f"struct {model.name} {{\n"
-        code += f";\n".join(
-            map(lambda key: f"{TAB}{_translate_attr(key)}", model.attrs)
-        )
-        code += ";\n};\n\n"
-        with open(out_dir / TYPES_FILE, "a") as f:
-            f.write(code)
+        def create_type():
+            code = f"struct {model.name} {{\n"
+            code += f";\n".join(
+                map(lambda key: f"{TAB}{_translate_attr(key)}", model.attrs)
+            )
+            code += ";\n};\n\n"
+            with open(out_dir / TYPES_FILE, "a") as f:
+                f.write(code)
+
+        def create_unmarshalling():
+            code = f"{model.name} unmarshall_{model.name}(char* message, int& i, int len) {{\n"
+            code += f"{TAB}int attr_len;\n"
+            code += f"{TAB}{model.name} {model.name}_struct;\n"
+
+            for attr in model.attrs:
+                code += f"{TAB}attr_len = unmarshall_int(message, i, LEN_SIZE);\n"
+                attr_type = attr.type
+                
+                if attr_type.startswith("sequence"):
+                    # vector<...>
+                    nested_type = attr_type.rstrip(">").split("sequence<", 1)[1]
+                    code += f"{TAB}std::vector<{nested_type}> temp_{attr.name} = std::vector<{nested_type}>();\n"
+                    code += f"{TAB}for (int j=0; j<attr_len; j++) {{\n"
+                    code += f"{TAB*2}temp_{attr.name}.push_back(unmarshall_{nested_type}(message, i, attr_len));\n"
+                    code += f"{TAB}}}\n"
+                    code += f"{TAB}{model.name}_struct.{attr.name} = temp_{attr.name};\n"
+                else:
+                    # structs and primitives
+                    code += f"{TAB}{model.name}_struct.{attr.name} = unmarshall_{attr_type}(message, i, attr_len);\n"         
+            
+            code += f"{TAB}return {model.name}_struct;\n"
+            code += "}\n\n"
+            with open(out_dir / UNMARSHALLING_FILE, "a") as f:
+                f.write(code)
+
+        create_type()
+        create_unmarshalling()
+
 
     @classmethod
     def _handle_enum(
@@ -78,11 +116,30 @@ class CPPCompiler(BaseCompiler):
         };
         ```
         """
-        code = f"enum {model.name} {{\n"
-        code += f",\n".join(map(lambda key: f"{TAB}{key}", model.keys))
-        code += "\n};\n\n"
-        with open(out_dir / TYPES_FILE, "a") as f:
-            f.write(code)
+
+        def create_type():
+            code = f"enum {model.name} {{\n"
+            code += f",\n".join(map(lambda key: f"{TAB}{key}", model.keys))
+            code += "\n};\n\n"
+            with open(out_dir / TYPES_FILE, "a") as f:
+                f.write(code)
+
+        def create_unmarshalling():
+            code = f"{model.name} unmarshall_{model.name}(char* message, int& i, int len) {{\n"
+            code += f"{TAB}char enum_id = message[i];\n"
+            code += f"{TAB}switch (enum_id) {{\n"
+            
+            for i, key in enumerate(model.keys, start=1):
+                code += f"{TAB*2}case {i}:\n"
+                code += f"{TAB*3}return ({model.name}) {key};\n"
+            code += f"{TAB}}}\n"
+            code += "}\n\n"
+            with open(out_dir / UNMARSHALLING_FILE, "a") as f:
+                f.write(code)
+
+        create_type()
+        create_unmarshalling()
+
 
     @classmethod
     def _handle_interface(
@@ -139,9 +196,7 @@ class CPPCompiler(BaseCompiler):
     def compile(
         cls, in_file: Path, out_dir: Path, out_dir_relative_to: Path
     ) -> None:
-        # create header files
-        with open(Path(out_dir / TYPES_FILE), "w") as f:
-            f.write("#include <string>\n#include <vector>\n\n")
-        with open(Path(out_dir / STUBS_FILE), "w") as f:
-            f.write('#include "proto_types.h"\n\n')
+        # copy templates
+        for file in Path("templates/cpp").iterdir():
+            (out_dir / file.name).write_text(file.read_text())        
         super().compile(in_file, out_dir, out_dir_relative_to)
