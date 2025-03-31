@@ -1,4 +1,4 @@
-package middleware\protos;
+package middleware.protos;
 
 import middleware.network.Servicer;
 import middleware.network.Bytes;
