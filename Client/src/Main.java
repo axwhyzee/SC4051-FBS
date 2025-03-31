@@ -44,7 +44,10 @@ public class Main {
             switch (choice) {
                 case "1":
                     System.out.println("\n[1] View Facilities");
-                    // service.viewFacilities();
+                    service.viewFacilities();
+
+                    System.out.print("\nPress Enter to continue...");
+                    input = scanner.nextLine();
                     break;
                 case "2":
                     List<Integer> dayList = new ArrayList<>();
@@ -82,8 +85,11 @@ public class Main {
                         }
                     }
                     System.out.println(facilityName + " " + dayList);
-
+                    
                     // bookingService.queryFacility(facilityName);
+
+                    System.out.print("\nPress Enter to continue...");
+                    input = scanner.nextLine();
                     break;
 
                 case "3":
@@ -125,6 +131,9 @@ public class Main {
 
                     System.out.println(facilityName + " " + startTime+ " " + endTime);
                     // bookingService.bookFacility(name, day, timeSlot);
+
+                    System.out.print("\nPress Enter to continue...");
+                    input = scanner.nextLine();
                     break;
 
                 case "4": 
@@ -156,6 +165,9 @@ public class Main {
                         }
                     }
                     System.out.println(bookingID + " " + number);
+
+                    System.out.print("\nPress Enter to continue...");
+                    input = scanner.nextLine();
                     break; 
 
                 case "5": 
@@ -187,6 +199,9 @@ public class Main {
                         }
                     }
                     System.out.println(bookingID + " " + number);
+                    System.out.print("\nPress Enter to continue...");
+                    input = scanner.nextLine();
+                    break; 
                 case "6":
                     System.out.println("Exiting...");
                     return;
