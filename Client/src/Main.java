@@ -202,7 +202,38 @@ public class Main {
                     System.out.print("\nPress Enter to continue...");
                     input = scanner.nextLine();
                     break; 
-                case "6":
+
+                case "6": 
+                    System.out.println("[6] Subscribe to Monitor Facility");
+
+                    while (true){ 
+                    System.out.print("Enter facility name: ");
+                        facilityName = scanner.nextLine().trim();
+                        if (facilityName.isEmpty()){
+                            System.out.println("Facility name cannot be empty. Please try again.");
+                        } else {
+                            break;
+                        }
+                    }
+
+                    while (true) {
+                        System.out.print("Enter the number of minutes to monitor facility's availability: ");
+                        input = scanner.nextLine().trim();
+                        
+                        try {
+                            number = Integer.parseInt(input); // Convert to integer (in minutes)
+                    
+                            break;
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid input! Please enter a valid integer value in minutes.");
+                        }
+                    }
+                    System.out.println(facilityName + " " + number);
+                    System.out.print("\nPress Enter to continue...");
+                    input = scanner.nextLine();
+                    break; 
+
+                case "7":
                     System.out.println("Exiting...");
                     return;
                 default:
