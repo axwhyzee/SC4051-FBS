@@ -40,4 +40,4 @@ rpc_tools --infile=proto.idl --outdir=../../client --lang=java
 # check outdir for generated stubs
 ```
 
-rpc_tools --infile=proto.idl --outdir=./protos --rootdir=. --lang=cpp
+rpc_tools --infile=proto.idl --outdir=./client --lang=cpp

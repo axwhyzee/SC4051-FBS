@@ -12,6 +12,7 @@ from .common import (
 from .model import EnumModel, InterfaceModel, StructModel
 from .typings import DType
 
+TEMPLATE_DIR = Path("rpc/templates/cpp")
 TYPES_FILE = "proto_types.h"
 STUBS_FILE = "stubs.h"
 STUBS_CPP_FILE = "stubs.cpp"
@@ -33,6 +34,9 @@ _translate_attr_type = partial(translate_attr_type, dtypes=CPP_DTYPES)
 
 
 class CPPCompiler(BaseCompiler):
+
+    method_counter = 1
+
     @classmethod
     def _handle_struct(
         cls, model: StructModel, out_dir: Path, root_dir: Path
@@ -104,13 +108,13 @@ class CPPCompiler(BaseCompiler):
                 if is_sequence(attr.type):
                     # sequences
                     nested_type = get_nested_type(attr.type)
-                    code += f"\t_marshall_len_header(message, i, val.{attr.name}.size());\n"
+                    code += f"\tmarshall_len_header(message, i, val.{attr.name}.size());\n"
                     code += f"\tfor (int j=0; j<val.{attr.name}.size(); j++)\n"
                     code += f"\t\tmarshall_{nested_type}(message, i, val.{attr.name}[j]);\n"
                 else:
                     # non-sequences
                     if attr.type == DType.STRING:
-                        code += f"\t_marshall_len_header(message, i, val.{attr.name}.length());\n"
+                        code += f"\tmarshall_len_header(message, i, val.{attr.name}.length());\n"
                     code += f"\tmarshall_{attr.type}(message, i, val.{attr.name});\n"
             code += "}\n\n"
             with open(out_dir / MARSHALLING_FILE, "a") as f:
@@ -211,7 +215,7 @@ class CPPCompiler(BaseCompiler):
             code += f"\t~{model.name}Stub() {{}};\n"
 
             for method in model.methods:
-                code += f"\t{method.ret_type} "
+                code += f"\t{_translate_attr_type(method.ret_type)} "
                 code += f"{method.name}("
                 code += ", ".join(
                     [_translate_attr(attr) for attr in method.args]
@@ -223,38 +227,47 @@ class CPPCompiler(BaseCompiler):
             return code
 
         def create_servicer() -> str:
-            dispatch_code = "\n"
+            code = "\n"
             for i, method in enumerate(model.methods, start=1):
-                dispatch_code += f"\t\t\tcase {i}: {{\n"
+                code += f"\t\t\tcase {i}: {{\n"
+                translated_ret_type = _translate_attr_type(method.ret_type)
                 arg_names = []
                 for arg in method.args:
                     arg_name = f"{arg.name}_arg"
                     translated_arg_type = _translate_attr_type(arg.type)
                     if is_sequence(arg.type):
                         nested_type = get_nested_type(arg.type)
-                        dispatch_code += f"\t\t\t\t{translated_arg_type} {arg_name} = {translated_arg_type}();\n"
-                        dispatch_code += f"\t\t\t\tint {arg_name}__len = unmarshall_int(message, i);\n"
-                        dispatch_code += (
+                        code += f"\t\t\t\t{translated_arg_type} {arg_name} = {translated_arg_type}();\n"
+                        code += f"\t\t\t\tint {arg_name}__len = unmarshall_int(message, i);\n"
+                        code += (
                             f"\t\t\t\tfor (int j=0; j<{arg_name}__len; j++)\n"
                         )
-                        dispatch_code += f"\t\t\t\t\t{arg_name}.push_back(unmarshall_{nested_type}(message, i));\n"
+                        code += f"\t\t\t\t\t{arg_name}.push_back(unmarshall_{nested_type}(message, i));\n"
                     else:
-                        dispatch_code += f"\t\t\t\t{translated_arg_type} {arg_name} = unmarshall_{arg.type}(message, i);\n"
+                        code += f"\t\t\t\t{translated_arg_type} {arg_name} = unmarshall_{arg.type}(message, i);\n"
                     arg_names.append(arg_name)
-                dispatch_code += f'\t\t\t\t{method.ret_type} result = service.{method.name}({", ".join(arg_names)});\n'
-                dispatch_code += f"\t\t\t\tmarshall_int(response, j, {i});\n"
-                dispatch_code += f"\t\t\t\tmarshall_{method.ret_type}(response, j, result);\n"
-                dispatch_code += "\t\t\t\treturn j;\n"
-                dispatch_code += "\t\t\t}\n"
+                code += f'\t\t\t\t{translated_ret_type} {method.name}__result = service.{method.name}({", ".join(arg_names)});\n'
+                code += f"\t\t\t\tmarshall_int(response, j, {cls.method_counter});\n"
+                cls.method_counter += 1
 
-            dispatch_code += "\t\t\tdefault:\n"
-            dispatch_code += "\t\t\t\tRAISE;"
+                if is_sequence(method.ret_type):
+                    nested_type = get_nested_type(method.ret_type)
+                    code += f"\t\t\t\tmarshall_len_header(response, i, {method.name}__result.size());\n"
+                    code += f"\t\t\t\tfor ({nested_type} result__seq__item : {method.name}__result)\n"
+                    code += f"\t\t\t\t\tmarshall_{nested_type}(response, i, result__seq__item);\n"
+                else:
+                    code += f"\t\t\t\tmarshall_{method.ret_type}(response, j, {method.name}__result);\n"
+                code += "\t\t\t\treturn j;\n"
+                code += "\t\t\t}\n"
+
+            code += "\t\t\tdefault:\n"
+            code += "\t\t\t\tRAISE;"
 
             with open(out_dir / STUBS_CPP_FILE, "a") as f:
                 f.write(
-                    (Path("templates/cpp/") / SERVICER_FILE)
+                    (TEMPLATE_DIR / SERVICER_FILE)
                     .read_text()
-                    .replace("{__DISPATCH_CODE__}", dispatch_code)
+                    .replace("{__DISPATCH_CODE__}", code)
                     .replace("{__SERVICE_NAME__}", model.name)
                 )
 
@@ -266,7 +279,7 @@ class CPPCompiler(BaseCompiler):
     @classmethod
     def compile(cls, in_file: Path, out_dir: Path, root_dir: Path) -> None:
         # copy templates
-        for file in Path("templates/cpp").iterdir():
+        for file in TEMPLATE_DIR.iterdir():
             if file.suffix in (".h", ".cpp") and not file.stem.startswith("_"):
                 (out_dir / file.name).write_text(file.read_text())
         super().compile(in_file, out_dir, root_dir)

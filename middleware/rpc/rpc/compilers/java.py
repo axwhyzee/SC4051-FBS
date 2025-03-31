@@ -34,7 +34,7 @@ _translate_attr_type = partial(translate_attr_type, dtypes=JAVA_DTYPES)
 
 class JavaCompiler(BaseCompiler):
 
-    METHOD_COUNTER = 1
+    method_counter = 1
 
     @classmethod
     def _handle_struct(
@@ -240,8 +240,8 @@ class JavaCompiler(BaseCompiler):
                 code += ") {\n"
                 code += "\t\tint[] i = {0};\n"
                 code += "\t\tbyte[] request_data = new byte[proto.get_buffer_size()];\n"
-                code += f"\t\tMarshaller.marshall_int(request_data, i, {cls.METHOD_COUNTER});\n"
-                cls.METHOD_COUNTER += 1
+                code += f"\t\tMarshaller.marshall_int(request_data, i, {cls.method_counter});\n"
+                cls.method_counter += 1
 
                 for arg in method.args:
                     if is_sequence(arg.type):
