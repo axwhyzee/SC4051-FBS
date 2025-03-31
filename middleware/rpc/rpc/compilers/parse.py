@@ -86,7 +86,6 @@ def parse_interface_file(
     for match in matches:
         block_type_str, block_name, block_body = match
         block_type = Block(block_type_str)
-        print(match)
         block_model = PARSERS[block_type].parse(
             block_name, _split_strip(block_body, ";", drop_last=True)
         )
