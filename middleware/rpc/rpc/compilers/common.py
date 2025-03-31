@@ -26,3 +26,11 @@ def translate_attr(attr: Attribute, dtypes: Dict[str, str]) -> str:
     ```
     """
     return f"{translate_attr_type(attr.type, dtypes)} {attr.name}"
+
+
+def is_sequence(attr_type: str):
+    return attr_type.startswith(DType.SEQUENCE.value)
+
+
+def get_nested_type(attr_type: str):
+    return attr_type.rstrip(">").split("<", 1)[1]

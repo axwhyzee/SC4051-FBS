@@ -77,8 +77,8 @@ public:
             }
 
             char response[BUFFER_SIZE];
-            int response_bytes = _dispatch(buffer, bytes_received, response);
-            send(client_socket, response, sizeof(char) * response_bytes, 0);
+            int response_len = _dispatch(buffer, bytes_received, response);
+            send(client_socket, response, sizeof(char) * response_len, 0);
             close(client_socket);
         }
     }
