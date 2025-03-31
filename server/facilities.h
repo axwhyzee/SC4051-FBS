@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
+#include <ctime>
 #include "protos/proto_types.h"
 #include "protos/stubs.h"
 
@@ -25,5 +26,7 @@ public:
     BookResponse bookFacility(string facilityName, string user, DayTime start, DayTime end);
     Response changeBooking(int bookingId, int offset);
     Response extendBooking(int bookingId, int minutes);
+    Response subscribe(string facilityName, int minutes, string client_ip, int client_port);
     FacilitiesResponse viewFacilities();
+
 };

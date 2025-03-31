@@ -123,7 +123,7 @@ BookResponse Facilities::bookFacility(string facilityName, string user, DayTime 
         return res;
     }
     if (end_time <= start_time) {
-        res.error = "End time must be greater than start time";
+        res.error = "End time must be later than start time";
         res.bookingId = -1;
         return res;
     }
@@ -167,8 +167,24 @@ Response Facilities::changeBooking(int bookingId, int offset) {
         return res;
     }
 }
-Response subscribe(std::string facilityName, int minutes) {
-    // TODO
+Response Facilities::subscribe(std::string facilityName, int minutes, string client_ip, int client_port) {
+    Response res;
+    if (facilities.find(facilityName) == facilities.end()) {
+        res.error = "No such facility name.";
+        return res;
+    }
+
+    time_t start_time;
+    time(&start_time);
+
+    Monitor* newMonitor = new Monitor(client_ip, client_port, start_time, minutes);
+
+    Facility* facility = facilities[facilityName];
+
+    facility->monitors.push_back(newMonitor);
+
+    res.error = "success";
+    return res;
 }
 Response Facilities::extendBooking(int bookingId, int minutes) {
     Response res;
@@ -209,9 +225,25 @@ FacilitiesResponse Facilities::viewFacilities() {
     return res;
 }
 
+void Facility::checkMonitors() {
+    vector<int> to_remove;
 
+    int monitors_len = monitors.size();
+    vector<Monitor*> newMonitors;
+    for (int i = 0; i < monitors_len; i++) {
+        if (monitors[i]->expired()) {
+            to_remove.push_back(i);
+        } else {
+            send_callback(facilityName, monitors[i]);
+            newMonitors.push_back(monitors[i]);
+        }
+    }
 
+    this->monitors = newMonitors;
+}
 
-
+bool send_callback(string facilityName, Monitor* monitor) {
+    // TODO
+}
 
 

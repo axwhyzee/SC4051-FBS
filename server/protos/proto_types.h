@@ -1,6 +1,6 @@
 #include <string>
 #include <vector>
-
+#include <ctime>
 enum Day {
     MONDAY,
     TUESDAY,
@@ -29,7 +29,26 @@ struct Booking {
     DayTime start;
     DayTime end;
 };
-
+class Monitor {
+private:
+    string client_ip;
+    int client_port;
+    time_t start_time;
+    int minutes;
+public:
+    Monitor(string client_ip, int client_port, time_t start_time, int minutes) {
+        client_ip = client_ip;
+        client_port = client_port;
+        start_time = start_time;
+        minutes = minutes;
+    }
+    bool expired() {
+        time_t cur_time;
+        time(&cur_time);
+        
+        return difftime(cur_time, start_time) >= minutes * 60;
+    }
+};
 class Facility {
 public:
     Facility(string name, string type) {
@@ -39,6 +58,8 @@ public:
     std::string facilityName;
     std::string type;
     std::vector<Booking> bookings;
+    std::vector<Monitor*> monitors;
+    void checkMonitors();
 };
 
 struct Response {
