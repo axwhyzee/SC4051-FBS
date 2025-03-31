@@ -170,12 +170,14 @@ public class FacilityBookingServiceImpl {
         
         // try {
         //     resp = stub.viewFacilities();
+        //     boundary.displayFacilityDetails(resp.facilities());
         // } catch (UnknownHostException e) {
         //     System.out.println("Localhost could not be resolved");
         // } catch (Exception e) {
         //     System.out.println("An error occurred during the request: " + e.getMessage());
         // }
-        boundary.displayFacilityDetails(facilities);
+
+        // boundary.displayFacilityDetails(facilities); // for testing
 
         return resp;
     }
