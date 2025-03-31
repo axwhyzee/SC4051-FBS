@@ -17,8 +17,11 @@ public interface Servicer {
      * as response if needed.
      * 
      * @param data Received message as Bytes
+     * @param buffer_size Max buffer size in bytes for containing 
+     *    the response. This value is given by the
+     *    underlying protocol.
      * @return Response as Bytes
      * @throws Exception
      */
-    public Bytes callback(Bytes data) throws Exception;
+    Bytes callback(Bytes data, int buffer_size) throws Exception;
 }

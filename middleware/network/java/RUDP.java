@@ -1,5 +1,3 @@
-package middleware.rudp;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -7,7 +5,9 @@ import java.net.InetAddress;
 
 
 /**
- * RUDP implements a reliable UDP-based protocol
+ * RUDP implements a reliable UDP-based protocol using
+ * transmissions with exponential backoffs, up till a 
+ * specified max retry limit.
  */
 public class RUDP implements Protocol {
 
@@ -34,7 +34,7 @@ public class RUDP implements Protocol {
 
                 try {
                     // run callback and send response
-                    Bytes result_bytes = servicer.callback(received_bytes);
+                    Bytes result_bytes = servicer.callback(received_bytes, BUFFER_SIZE);
                     send(
                         packet.getAddress(), 
                         packet.getPort(), 

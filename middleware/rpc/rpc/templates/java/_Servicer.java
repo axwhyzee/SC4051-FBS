@@ -1,11 +1,9 @@
-import java.net.InetAddress;
-import middleware.rudp.Servicer;
-import middleware.rudp.UDPClient;
+import middleware.network.Servicer;
+import middleware.network.Bytes;
 
 
 public class {__SERVICE_NAME__}Servicer implements Servicer {
-    public static final int BUFFER_SIZE = 1024;
-    private {__SERVICE_NAME__} service;
+    private final {__SERVICE_NAME__} service;
 
     public {__SERVICE_NAME__}Servicer({__SERVICE_NAME__} service) {
         this.service = service;
@@ -19,13 +17,10 @@ public class {__SERVICE_NAME__}Servicer implements Servicer {
         }
     }
     
-    public void callback(byte[] data, InetAddress client_addr, int client_port) {
-        byte[] response = new byte[BUFFER_SIZE];
-        try {
-            int response_len = _dispatch(data, response);
-            UDPClient.send(client_addr, client_port, response, response_len);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    @Override
+    public Bytes callback(Bytes data, int buffer_size) throws Exception {
+        byte[] response = new byte[buffer_size];
+        int response_len = _dispatch(data.bytes(), response);
+        return new Bytes(response, response_len);
     }
 }

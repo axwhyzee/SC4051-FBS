@@ -23,6 +23,7 @@ JAVA_DTYPES: Dict[str, str] = {
 MARSHALLER_FILE = "Marshaller.java"
 UNMARSHALLER_FILE = "Unmarshaller.java"
 SERVICER_FILE = "_Servicer.java"
+STUB_FILE = "_Stub.java"
 
 
 _translate_attr = partial(translate_attr, dtypes=JAVA_DTYPES)
@@ -30,6 +31,8 @@ _translate_attr_type = partial(translate_attr_type, dtypes=JAVA_DTYPES)
 
 
 class JavaCompiler(BaseCompiler):
+
+    METHOD_COUNTER = 1
 
     @classmethod
     def _handle_struct(
@@ -71,7 +74,7 @@ class JavaCompiler(BaseCompiler):
             for attr in model.attrs:
                 if is_sequence(attr.type):
                     nested_type = get_nested_type(attr.type)
-                    code += f"\t\t_marshall_len_header(message, i, val.{attr.name}().length);\n"
+                    code += f"\t\tmarshall_len_header(message, i, val.{attr.name}().length);\n"
                     code += f"\t\tfor ({nested_type} {attr.name}__item : val.{attr.name}())\n"
                     code += f"\t\t\tmarshall_{nested_type}(message, i, {attr.name}__item);\n"
                 else:
@@ -169,7 +172,7 @@ class JavaCompiler(BaseCompiler):
             """
             code = f"public interface {model.name} {{\n"
             for method in model.methods:
-                code += f"\t{method.ret_type} "
+                code += f"\t{_translate_attr_type(method.ret_type)} "
                 code += f"{method.name}("
                 code += ", ".join(
                     [_translate_attr(attr) for attr in method.args]
@@ -179,9 +182,9 @@ class JavaCompiler(BaseCompiler):
             (out_dir / f"{model.name}.java").write_text(code)
 
         def create_servicer():
-            dispatch_code = "\n"
+            code = "\n"
             for i, method in enumerate(model.methods, start=1):
-                dispatch_code += f"\t\t\tcase {i}:\n"
+                code += f"\t\t\tcase {i}:\n"
                 arg_names = []
 
                 for arg in method.args:
@@ -191,23 +194,33 @@ class JavaCompiler(BaseCompiler):
 
                     if is_sequence(arg.type):
                         nested_type = get_nested_type(arg.type)
-                        dispatch_code += f"\t\t\t\tint {arg_name}__len = Unmarshaller.unmarshall_int(message, i);\n"
-                        dispatch_code += f"\t\t\t\t{translated_type} {arg_name} = new {nested_type}[{arg_name}__len];\n"
-                        dispatch_code += f"\t\t\t\tfor (int j=0; j<{arg_name}__len; j++)\n"
-                        dispatch_code += f"\t\t\t\t\t{arg_name}[j] = Unmarshaller.unmarshall_{nested_type}(message, i);\n"
+                        code += f"\t\t\t\tint {arg_name}__len = Unmarshaller.unmarshall_int(message, i);\n"
+                        code += f"\t\t\t\t{translated_type} {arg_name} = new {nested_type}[{arg_name}__len];\n"
+                        code += f"\t\t\t\tfor (int j=0; j<{arg_name}__len; j++)\n"
+                        code += f"\t\t\t\t\t{arg_name}[j] = Unmarshaller.unmarshall_{nested_type}(message, i);\n"
                     else:
-                        dispatch_code += f"\t\t\t\t{translated_type} {arg_name} = Unmarshaller.unmarshall_{arg.type}(message, i);\n"
-                dispatch_code += f'\t\t\t\t{method.ret_type} {method.name}__result = service.{method.name}({", ".join(arg_names)});\n'
-                dispatch_code += f"\t\t\t\tMarshaller.marshall_{method.ret_type}(response, i, {method.name}__result);\n"
-                dispatch_code += "\t\t\t\treturn i[0];\n"
+                        code += f"\t\t\t\t{translated_type} {arg_name} = Unmarshaller.unmarshall_{arg.type}(message, i);\n"
 
-            dispatch_code += "\t\t\tdefault:\n"
-            dispatch_code += "\t\t\t\tthrow new Exception(\"Unexpected method ID: \" + method_id);"
+                code += f'\t\t\t\t{_translate_attr_type(method.ret_type)} {method.name}__result = service.{method.name}({", ".join(arg_names)});\n'
+                
+                if is_sequence(method.ret_type):
+                    nested_type = get_nested_type(method.ret_type)
+                    translated_type = _translate_attr_type(method.ret_type)
+                    code += f"\t\t\t\tint result__seq__len = {method.name}__result.length;\n"
+                    code += f"\t\t\t\t{translated_type} result__seq = new {nested_type}[result__seq__len];\n"
+                    code += f"\t\t\t\tfor ({nested_type} result__seq__item : result__seq)\n"
+                    code += f"\t\t\t\t\tMarshaller.marshall_{nested_type}(response, i, result__seq__item);\n"
+                else:
+                    code += f"\t\t\t\tMarshaller.marshall_{method.ret_type}(response, i, {method.name}__result);\n"
+                code += "\t\t\t\treturn i[0];\n"
+
+            code += "\t\t\tdefault:\n"
+            code += "\t\t\t\tthrow new Exception(\"Unexpected method ID: \" + method_id);"
 
             (out_dir / f"{model.name}Servicer.java").write_text(
                 (Path("templates/java") / SERVICER_FILE).read_text()
                 .replace("{__SERVICE_NAME__}", model.name)
-                .replace("{__DISPATCH_CODE__}", dispatch_code)
+                .replace("{__DISPATCH_CODE__}", code)
             )
 
 
@@ -215,18 +228,45 @@ class JavaCompiler(BaseCompiler):
             """
             Stub will be called by client to make RPCs
             """
-            code = f"public class {model.name}Stub {{\n"
+            code = ""
             for method in model.methods:
-                code += f"\t{method.ret_type} "
-                code += f"{method.name}("
+                code += f"\t{_translate_attr_type(method.ret_type)} {method.name}("
                 code += ", ".join(
                     [_translate_attr(attr) for attr in method.args]
                 )
-                code += (
-                    ") {/* TODO: marshall and send to server via UDP */};\n"
-                )
-            code += "}"
-            (out_dir / f"{model.name}Stub.java").write_text(code)
+                code += ") {\n"
+                code += "\t\tint[] i = {0};\n"
+                code += "\t\tbyte[] request_data = new byte[proto.get_buffer_size()];\n"
+                code += f"\t\tMarshaller.marshall_int(request_data, i, {cls.METHOD_COUNTER});\n"
+                cls.METHOD_COUNTER += 1
+
+                for arg in method.args:
+                    if is_sequence(arg.type):
+                        nested_type = get_nested_type(arg.type)
+                        code += f"\t\tMarshaller.marshall_len_header(request_data, i, {arg.name}.length);\n"
+                        code += f"\t\tfor ({nested_type} {arg.name}__arg : {arg.name})\n"
+                        code += f"\t\t\tMarshaller.marshall_{nested_type}(request_data, i, {arg.name}__arg);\n"        
+                    else:
+                        code += f"\t\tMarshaller.marshall_{arg.type}(request_data, i, {arg.name});\n"
+                code += f"\t\tbyte[] response_data = _send(new Bytes(request_data, i[0])).bytes();\n"
+                code += f"\t\ti[0] = 0;\n"
+                if is_sequence(method.ret_type):
+                    nested_type = get_nested_type(method.ret_type)
+                    translated_type = _translate_attr_type(method.ret_type)
+                    code += f"\t\tint response__seq__len = Unmarshaller.unmarshall_int(response_data, i);\n"
+                    code += f"\t\t{translated_type} response__seq = new {nested_type}[response__seq__len];\n"
+                    code += f"\t\tfor (int j=0; j<response__seq__len; j++)\n"
+                    code += f"\t\t\tresponse__seq[j] = Unmarshaller.unmarshall_{nested_type}(response_data, i);\n"
+                    code += f"\t\treturn response__seq;\n"
+                else:
+                    code += f"\t\treturn Unmarshaller.unmarshall_{method.ret_type}(response_data, i);\n"
+                code += "\t}\n\n"
+            template = (Path("templates/java") / STUB_FILE).read_text()
+            (out_dir / f"{model.name}Stub.java").write_text(
+                template
+                .replace("{__SERVICE_NAME__}", model.name)
+                .replace("{__STUB_METHODS__}", code)
+            )
 
         create_service_stub()
         create_servicer()

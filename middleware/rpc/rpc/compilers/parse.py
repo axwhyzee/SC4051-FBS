@@ -52,7 +52,7 @@ class InterfaceParser(AbstractParser):
     def parse(cls, name: str, lines: List[str]) -> BlockModel:
         methods = []
         for line in lines:
-            if not (match := re.match(r"(\w+)\s+(\w+)\s*\(([^\)]*)\)", line)):
+            if not (match := re.match(r"([\w<>]+)\s+(\w+)\s*\(([^\)]*)\)", line)):
                 raise
             ret_type, f_name, args = match.groups()
             methods.append(
@@ -86,6 +86,7 @@ def parse_interface_file(
     for match in matches:
         block_type_str, block_name, block_body = match
         block_type = Block(block_type_str)
+        print(match)
         block_model = PARSERS[block_type].parse(
             block_name, _split_strip(block_body, ";", drop_last=True)
         )
