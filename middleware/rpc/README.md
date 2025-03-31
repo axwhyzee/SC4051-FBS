@@ -23,21 +23,77 @@ pip install .  # installs rpc package
 #### C++
 
 ```
-mkdir ../client
-mkdir ../client/protos
+mkdir ../../client
+mkdir ../../client/protos
 source env/bin/activate
-rpc_tools --infile=proto.idl --outdir=../../server/protos --rootdir=../../server --lang=cpp
-# check outdir for generated stubs
+rpc_tools --infile=proto.idl --outdir=../../server --lang=cpp
 ```
 
 #### Java
 
 ```
-mkdir ../client
-mkdir ../client/protos
+mkdir ../../client
+mkdir ../../client/protos
 source env/bin/activate
 rpc_tools --infile=proto.idl --outdir=../../client --lang=java
-# check outdir for generated stubs
+```
+
+After compilation, the project structure will look like this:
+```
+|
+|-- client/
+|   |
+|   |-- middleware
+|   |   |-- protos
+|   |   |   |-- Day.java
+|   |   |   |-- DayTime.java
+|   |   |   |-- ...
+|   |   |
+|   |   |-- network
+|   |       |-- Protocol.java
+|   |       |-- RUDP.java
+|   |       |-- ...
+|   |   
+|   |-- TestClient.java // create yourself
+|   |-- ...
+|
+|-- middleware/
+|-- server/
+```
+
+```
+// Example Java client (TestClient.java)
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import middleware.network.RUDP;
+import middleware.protos.AvailabilityResponse;
+import middleware.protos.FacilityBookingServiceStub;
+import middleware.protos.Day;
+import middleware.protos.Interval;
+
+
+public class TestServer {
+    public static void main(String args[]) {
+        try {
+            // configure client
+            InetAddress localhost = InetAddress.getLocalHost();
+            RUDP rudp = new RUDP();
+            int port = 5432;
+            FacilityBookingServiceStub stub = new FacilityBookingServiceStub(localhost, port, rudp);   
+
+            // make RPC request
+            Day[] days = {Day.FRIDAY, Day.MONDAY};     
+            AvailabilityResponse resp = stub.queryFacility("Facility A", days);
+            System.out.println(resp.error());
+            for (Interval itv : resp.availability()) {
+                System.out.println("Start: " + itv.start());
+                System.out.println("End: " + itv.end());
+            }
+        } catch (UnknownHostException e) {
+            System.out.println("Localhost could not be resolved");
+        }
+    }
+}
 ```
 
 rpc_tools --infile=proto.idl --outdir=./client --lang=cpp
