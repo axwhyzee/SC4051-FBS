@@ -111,17 +111,22 @@ public class FacilityBookingServiceImpl {
     }
 
     
-    public BookResponse bookFacility(String user, DayTime start, DayTime end) {
+    public BookResponse bookFacility(String user, String start, String end) {
         
         BookResponse resp = null;
         
-        // try {
-        //     resp = stub.bookFacility(user,start,end);
-        // } catch (UnknownHostException e) {
-        //     System.out.println("Localhost could not be resolved");
-        // } catch (Exception e) {
-        //     System.out.println("An error occurred during the request: " + e.getMessage());
-        // }
+        try {
+            resp = stub.bookFacility(user,convertToDayTime(start),convertToDayTime(end));
+            if (resp.bookingId() > 0){
+                System.out.println("Booking successfully made! Your booking confirmation ID: " + resp.bookingId());
+            } else {
+                System.out.println("Booking failed. Please try again.");
+            }
+        } catch (UnknownHostException e) {
+            System.out.println("Localhost could not be resolved");
+        } catch (Exception e) {
+            System.out.println("An error occurred during the request: " + e.getMessage());
+        }
 
         return  resp; 
 
@@ -186,7 +191,7 @@ public class FacilityBookingServiceImpl {
         //     System.out.println("An error occurred during the request: " + e.getMessage());
         // }
 
-        // boundary.displayFacilityDetails(facilities); // for testing
+        boundary.displayFacilityDetails(facilities); // for testing
 
         return resp;
     }
@@ -202,5 +207,21 @@ public class FacilityBookingServiceImpl {
         }
 
         return daysArray;
+    }
+
+    public static DayTime convertToDayTime(String input) {
+        // Split the input string by space
+        String[] parts = input.split(" ");
+
+        // Extract the day and time components
+        int day = Integer.parseInt(parts[0]);
+        String[] timeParts = parts[1].split(":");
+        int hour = Integer.parseInt(timeParts[0]);
+        int minute = Integer.parseInt(timeParts[1]);
+
+        // Create a DayTime object using the parsed values
+        DayTime dayTime = new DayTime(Day.values()[day - 1], hour, minute);
+        
+        return dayTime;
     }
 }

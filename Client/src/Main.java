@@ -123,7 +123,8 @@ public class Main {
                     }
 
                     System.out.println(facilityName + " " + startTime+ " " + endTime);
-                    // bookingService.bookFacility(name, day, timeSlot);
+                    
+                    service.bookFacility(name, startTime, endTime);
 
                     System.out.print("\nPress Enter to continue...");
                     input = scanner.nextLine();
