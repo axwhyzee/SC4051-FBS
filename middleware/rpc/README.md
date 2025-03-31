@@ -33,7 +33,6 @@ rpc_tools --infile=proto.idl --outdir=../../server --lang=cpp
 
 ```
 mkdir ../../client
-mkdir ../../client/protos
 source env/bin/activate
 rpc_tools --infile=proto.idl --outdir=../../client --lang=java
 ```
