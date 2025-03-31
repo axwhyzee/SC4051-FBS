@@ -20,7 +20,7 @@ JAVA_DTYPES: Dict[str, str] = {
     DType.SEQUENCE.value: "{type}[]",
 }
 
-TEMPLATES_DIR = Path("templates/java")
+TEMPLATES_DIR = Path("rpc/templates/java")
 MARSHALLER_FILE = "Marshaller.java"
 UNMARSHALLER_FILE = "Unmarshaller.java"
 SERVICER_FILE = "_Servicer.java"
@@ -233,7 +233,7 @@ class JavaCompiler(BaseCompiler):
             """
             code = ""
             for method in model.methods:
-                code += f"\t{_translate_attr_type(method.ret_type)} {method.name}("
+                code += f"\tpublic {_translate_attr_type(method.ret_type)} {method.name}("
                 code += ", ".join(
                     [_translate_attr(attr) for attr in method.args]
                 )
