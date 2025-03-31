@@ -179,19 +179,6 @@ class JavaCompiler(BaseCompiler):
             (out_dir / f"{model.name}.java").write_text(code)
 
         def create_servicer():
-            '''
-            case 1:
-                String facilityName__arg = Unmarshaller.unmarshall_string(message, i);
-                int days__arg__len = Unmarshaller.unmarshall_int(message, i);
-                Day[] days__arg = new Day[days__arg__len];
-
-                for (int j=0; j<days__arg__len; j++) {
-                    days__arg[j] = Unmarshaller.unmarshall_Day(message, i);
-                }
-                AvailabilityResponse result = this.service.queryFacility(facilityName__arg, days__arg);
-                Marshaller.marshall_AvailabilityResponse(response, i, result);
-                return i[0];
-            '''
             dispatch_code = "\n"
             for i, method in enumerate(model.methods, start=1):
                 dispatch_code += f"\t\t\tcase {i}:\n"
@@ -210,7 +197,7 @@ class JavaCompiler(BaseCompiler):
                         dispatch_code += f"\t\t\t\t\t{arg_name}[j] = Unmarshaller.unmarshall_{nested_type}(message, i);\n"
                     else:
                         dispatch_code += f"\t\t\t\t{translated_type} {arg_name} = Unmarshaller.unmarshall_{arg.type}(message, i);\n"
-                dispatch_code += f'\t\t\t\t{method.ret_type} {method.name}__result = this.service.{method.name}({", ".join(arg_names)});\n'
+                dispatch_code += f'\t\t\t\t{method.ret_type} {method.name}__result = service.{method.name}({", ".join(arg_names)});\n'
                 dispatch_code += f"\t\t\t\tMarshaller.marshall_{method.ret_type}(response, i, {method.name}__result);\n"
                 dispatch_code += "\t\t\t\treturn i[0];\n"
 
