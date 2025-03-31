@@ -36,7 +36,8 @@ public class Main {
             System.out.println("3. Book Facility");
             System.out.println("4. Change Booking");
             System.out.println("5. Extend Booking");
-            System.out.println("6. Exit");
+            System.out.println("6. Subscribe to Monitor Facility Availability");
+            System.out.println("7. Exit");
             System.out.print("Choose an option: ");
 
             String choice = scanner.nextLine().trim();
@@ -86,7 +87,7 @@ public class Main {
                     }
                     System.out.println(facilityName + " " + dayList);
                     
-                    // bookingService.queryFacility(facilityName);
+                    service.queryFacility(facilityName, dayList);
 
                     System.out.print("\nPress Enter to continue...");
                     input = scanner.nextLine();

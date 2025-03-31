@@ -1,5 +1,10 @@
 package boundary; 
 
+import java.util.List;
+
+import middleware.protos.Day; 
+import middleware.protos.DayTime;
+import middleware.protos.Interval;
 import middleware.protos.Facility;
 
 public class FacilityBookingBoundary {
@@ -26,4 +31,32 @@ public class FacilityBookingBoundary {
             System.out.println(String.format("%-20s %-20s", facility.name(), facility.type()));
         }
     }
+
+    public void displayAvailability(String facilityName, Interval[] availability, List<Integer> days) {
+        // Print header
+        System.out.println("Showing Availability of " + facilityName); 
+        System.out.println(String.format("%9s %-10s %9s %-10s", "Start", "Time", "End", "Time"));
+        System.out.println("-------------------- --------------------");
+
+        // Loop through each interval
+        for (Interval interval : availability) {
+            // Extract start and end times
+            DayTime start = interval.start();
+            DayTime end = interval.end();
+            
+            // Check if the start and end day are in the 'days' list
+            if (days.contains(start.day().ordinal() + 1) && days.contains(end.day().ordinal() + 1)) {
+                // Format start and end times
+                String startTime = String.format("%9s %02d:%02d", start.day(), start.hour(), start.minute());
+                String endTime = String.format("%9s %02d:%02d", end.day(), end.hour(), end.minute());
+
+                // Print formatted interval
+                System.out.println(String.format("%-20s %-20s", startTime, endTime));
+            }
+        }
+    }
+
+    
+
+
 }

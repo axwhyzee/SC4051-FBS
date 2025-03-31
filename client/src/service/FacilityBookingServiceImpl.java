@@ -1,5 +1,8 @@
 package service;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import middleware.protos.FacilityBookingService;
 import middleware.protos.AvailabilityResponse;
 import middleware.protos.BookResponse;
@@ -53,8 +56,8 @@ public class FacilityBookingServiceImpl {
             }
         ),
         new Facility(
-            "Gym A",
-            "Gym Facility",
+            "Hall B",
+            "Sports Hall",
             new Booking[] {
                 new Booking("Frank", new DayTime(Day.MONDAY, 7, 0), new DayTime(Day.MONDAY, 8, 0)),
                 new Booking("Grace", new DayTime(Day.FRIDAY, 18, 0), new DayTime(Day.FRIDAY, 19, 0)),
@@ -86,17 +89,23 @@ public class FacilityBookingServiceImpl {
     }
 
     
-    public AvailabilityResponse queryFacility(String facilityName, Day[] days) {
+    public AvailabilityResponse queryFacility(String facilityName, List<Integer> daysList) {
         
         AvailabilityResponse resp = null;
         
         // try {
+        //     // convert to Day structure
+        //     Day[] days = convertListToDayArray(daysList);
         //     resp = stub.queryFacility(facilityName,days);
+        //     boundary.displayAvailability(facilityName,resp.availability(),daysList);
         // } catch (UnknownHostException e) {
         //     System.out.println("Localhost could not be resolved");
         // } catch (Exception e) {
         //     System.out.println("An error occurred during the request: " + e.getMessage());
         // }
+        
+        boundary.displayAvailability(facilityName,exampleAvailability,daysList); // for testing
+
 
         return  resp; 
     }
@@ -180,5 +189,18 @@ public class FacilityBookingServiceImpl {
         // boundary.displayFacilityDetails(facilities); // for testing
 
         return resp;
+    }
+
+    public static Day[] convertListToDayArray(List<Integer> daysList) {
+        // Create a new Day[] array with the size of the List
+        Day[] daysArray = new Day[daysList.size()];
+
+        // Populate the Day[] array by mapping integers to Day enum values
+        for (int i = 0; i < daysList.size(); i++) {
+            int dayIndex = daysList.get(i) - 1; // Convert to 0-based index
+            daysArray[i] = Day.values()[dayIndex];
+        }
+
+        return daysArray;
     }
 }
