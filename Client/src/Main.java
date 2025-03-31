@@ -124,7 +124,7 @@ public class Main {
 
                     System.out.println(facilityName + " " + startTime+ " " + endTime);
                     
-                    service.bookFacility(name, startTime, endTime);
+                    service.bookFacility(facilityName, startTime, endTime);
 
                     System.out.print("\nPress Enter to continue...");
                     input = scanner.nextLine();
@@ -160,6 +160,8 @@ public class Main {
                     }
                     System.out.println(bookingID + " " + number);
 
+                    service.changeBooking(bookingID,number);
+
                     System.out.print("\nPress Enter to continue...");
                     input = scanner.nextLine();
                     break; 
@@ -193,6 +195,9 @@ public class Main {
                         }
                     }
                     System.out.println(bookingID + " " + number);
+                    
+                    service.extendBooking(bookingID,number);
+
                     System.out.print("\nPress Enter to continue...");
                     input = scanner.nextLine();
                     break; 
@@ -223,11 +228,22 @@ public class Main {
                         }
                     }
                     System.out.println(facilityName + " " + number);
+
+                    
+                    service.subscribe(facilityName,number);
+
                     System.out.print("\nPress Enter to continue...");
                     input = scanner.nextLine();
                     break; 
 
                 case "7":
+                    System.out.println("[7] View Availability of Subscribed Facility");
+                    service.viewSubscribedAvailability();
+                    
+                    System.out.print("\nPress Enter to continue...");
+                    input = scanner.nextLine();
+                    break; 
+                case "8":
                     System.out.println("Exiting...");
                     return;
                 default:

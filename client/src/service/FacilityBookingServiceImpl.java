@@ -2,6 +2,7 @@ package service;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import middleware.protos.FacilityBookingService;
 import middleware.protos.AvailabilityResponse;
@@ -73,6 +74,9 @@ public class FacilityBookingServiceImpl {
         new Interval(new DayTime(Day.WEDNESDAY, 16, 0), new DayTime(Day.WEDNESDAY, 20, 0))  // After Bob's booking
     };
 
+    private Interval[] subscribedAvailability = null; 
+    private String subscribedFacility = ""; 
+
     // Constructor
     public FacilityBookingServiceImpl(String user) {
         this.user = user;
@@ -89,7 +93,7 @@ public class FacilityBookingServiceImpl {
     }
 
     
-    public AvailabilityResponse queryFacility(String facilityName, List<Integer> daysList) {
+    public void queryFacility(String facilityName, List<Integer> daysList) {
         
         AvailabilityResponse resp = null;
         
@@ -107,33 +111,34 @@ public class FacilityBookingServiceImpl {
         boundary.displayAvailability(facilityName,exampleAvailability,daysList); // for testing
 
 
-        return  resp; 
     }
 
     
-    public BookResponse bookFacility(String user, String start, String end) {
+    public void bookFacility(String user, String start, String end) {
         
         BookResponse resp = null;
         
-        try {
-            resp = stub.bookFacility(user,convertToDayTime(start),convertToDayTime(end));
-            if (resp.bookingId() > 0){
-                System.out.println("Booking successfully made! Your booking confirmation ID: " + resp.bookingId());
-            } else {
-                System.out.println("Booking failed. Please try again.");
-            }
-        } catch (UnknownHostException e) {
-            System.out.println("Localhost could not be resolved");
-        } catch (Exception e) {
-            System.out.println("An error occurred during the request: " + e.getMessage());
-        }
-
-        return  resp; 
-
+        // try {
+        //     resp = stub.bookFacility(user,convertToDayTime(start),convertToDayTime(end));
+        //     if (resp.bookingId() > 0){
+        //         System.out.println("Booking successfully made! Your booking confirmation ID: " + resp.bookingId());
+        //     } else {
+        //         System.out.println("Booking failed. Please try again.");
+        //     }
+        // } catch (UnknownHostException e) {
+        //     System.out.println("Localhost could not be resolved");
+        // } catch (Exception e) {
+        //     System.out.println("An error occurred during the request: " + e.getMessage());
+        // }
+ 
+        // Testing
+        DayTime startTime = convertToDayTime(start); 
+        DayTime endTime = convertToDayTime(end); 
+        System.out.println(String.format("%s %02d:%02d, %s %02d:%02d", startTime.day(), startTime.hour(), startTime.minute(), endTime.day(), endTime.hour(), endTime.minute()));
     }
 
     
-    public Response changeBooking(int bookingId, int offset) {
+    public void changeBooking(int bookingId, int offset) {
         Response resp = null;
         
         // try {
@@ -144,11 +149,23 @@ public class FacilityBookingServiceImpl {
         //     System.out.println("An error occurred during the request: " + e.getMessage());
         // }
 
-        return  resp; 
+    }
+    
+    public void extendBooking(int bookingId, int minutes) {
+        Response resp = null;
+        
+        // try {
+        //     resp = stub.extendBooking(bookingId,minutes);
+        // } catch (UnknownHostException e) {
+        //     System.out.println("Localhost could not be resolved");
+        // } catch (Exception e) {
+        //     System.out.println("An error occurred during the request: " + e.getMessage());
+        // }
+ 
     }
 
     
-    public Response subscribe(String facilityName, int minutes) {
+    public void subscribe(String facilityName, int minutes) {
         Response resp = null;
         
         // try {
@@ -159,26 +176,23 @@ public class FacilityBookingServiceImpl {
         //     System.out.println("An error occurred during the request: " + e.getMessage());
         // }
 
-        return  resp; 
+       
     }
 
     
-    public Response extendBooking(int bookingId, int minutes) {
-        Response resp = null;
+    public void viewSubscribedAvailability() {
         
-        // try {
-        //     resp = stub.extendBooking(bookingId,minutes);
-        // } catch (UnknownHostException e) {
-        //     System.out.println("Localhost could not be resolved");
-        // } catch (Exception e) {
-        //     System.out.println("An error occurred during the request: " + e.getMessage());
-        // }
-
-        return  resp; 
+        
+        if (subscribedFacility.isEmpty()){
+            System.out.println("You are not subscribed to any facility");
+        } else {
+            List<Integer> days = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7));
+            boundary.displayAvailability(subscribedFacility,subscribedAvailability,days); 
+        }
     }
 
     
-    public FacilitiesResponse viewFacilities() {
+    public void viewFacilities() {
         
         FacilitiesResponse resp = null;
         
@@ -193,7 +207,6 @@ public class FacilityBookingServiceImpl {
 
         boundary.displayFacilityDetails(facilities); // for testing
 
-        return resp;
     }
 
     public static Day[] convertListToDayArray(List<Integer> daysList) {
