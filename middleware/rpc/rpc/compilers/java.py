@@ -259,9 +259,10 @@ class JavaCompiler(BaseCompiler):
                 f.write("}")
 
         # set package
+        package = str(out_dir.relative_to(root_dir)).replace("/", ".")
         if out_dir != root_dir:
             for file in out_dir.iterdir():
                 file.write_text(
-                    f"package {out_dir.relative_to(root_dir)};\n\n"
+                    f"package {package};\n\n"
                     + file.read_text()
                 )
