@@ -30,15 +30,7 @@ public class Main {
         FacilityBookingServiceImpl service = new FacilityBookingServiceImpl(userName); 
 
         while (true) {
-            System.out.println("\nFacility Booking System");
-            System.out.println("1. View Facilities");
-            System.out.println("2. Check Facility Availability");
-            System.out.println("3. Book Facility");
-            System.out.println("4. Change Booking");
-            System.out.println("5. Extend Booking");
-            System.out.println("6. Subscribe to Monitor Facility Availability");
-            System.out.println("7. Exit");
-            System.out.print("Choose an option: ");
+            boundary.displayMainMenu();
 
             String choice = scanner.nextLine().trim();
 
