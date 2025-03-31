@@ -5,7 +5,7 @@ int MN_TIME = convertDayTimeToInt({(Day)0, 0, 0});
 int MX_TIME = convertDayTimeToInt({(Day)6, 23, 59});
 
 
-vector<vector<Interval>> get_availability(Facility* facility) {
+vector<Interval> get_availability(Facility* facility) {
     vector<pair<int, int>> bookings;
     for (auto &booking : facility->bookings) {
         int start = convertDayTimeToInt(booking.start);
@@ -15,7 +15,7 @@ vector<vector<Interval>> get_availability(Facility* facility) {
     sort(bookings.begin(), bookings.end());
 
     
-    vector<vector<Interval>> res(7, vector<Interval>());
+    vector<Interval> res;
     int booking_len = bookings.size();
     int cur = 0;
     for (int i = 0; i < 7; i++) {
@@ -25,12 +25,12 @@ vector<vector<Interval>> get_availability(Facility* facility) {
         int end = convertDayTimeToInt(end_time);
 
         while(cur < booking_len && bookings[cur].first > start) {
-            res[i].push_back({convertIntToDayTime(start), convertIntToDayTime(bookings[cur].first)});
+            res.push_back({convertIntToDayTime(start), convertIntToDayTime(bookings[cur].first)});
             start = min(end, bookings[cur].second + 1);
             cur ++;
         }
         if (start < end) {
-            res[i].push_back({convertIntToDayTime(start), convertIntToDayTime(end)});
+            res.push_back({convertIntToDayTime(start), convertIntToDayTime(end)});
         }
     }
 
@@ -234,7 +234,7 @@ void Facility::checkMonitors() {
         if (monitors[i]->expired()) {
             to_remove.push_back(i);
         } else {
-            send_callback(facilityName, monitors[i]);
+            send_callback(this, monitors[i]);
             newMonitors.push_back(monitors[i]);
         }
     }
@@ -242,8 +242,9 @@ void Facility::checkMonitors() {
     this->monitors = newMonitors;
 }
 
-bool send_callback(string facilityName, Monitor* monitor) {
+bool send_callback(Facility* facility, Monitor* monitor) {
     // TODO
+    // Send availabilities of facility to client
 }
 
 
