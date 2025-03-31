@@ -20,10 +20,12 @@ JAVA_DTYPES: Dict[str, str] = {
     DType.SEQUENCE.value: "{type}[]",
 }
 
+TEMPLATES_DIR = Path("templates/java")
 MARSHALLER_FILE = "Marshaller.java"
 UNMARSHALLER_FILE = "Unmarshaller.java"
 SERVICER_FILE = "_Servicer.java"
 STUB_FILE = "_Stub.java"
+
 
 
 _translate_attr = partial(translate_attr, dtypes=JAVA_DTYPES)
@@ -216,9 +218,10 @@ class JavaCompiler(BaseCompiler):
 
             code += "\t\t\tdefault:\n"
             code += "\t\t\t\tthrow new Exception(\"Unexpected method ID: \" + method_id);"
-
+            
+            template = (TEMPLATES_DIR / SERVICER_FILE).read_text()
             (out_dir / f"{model.name}Servicer.java").write_text(
-                (Path("templates/java") / SERVICER_FILE).read_text()
+                template
                 .replace("{__SERVICE_NAME__}", model.name)
                 .replace("{__DISPATCH_CODE__}", code)
             )
@@ -261,7 +264,7 @@ class JavaCompiler(BaseCompiler):
                 else:
                     code += f"\t\treturn Unmarshaller.unmarshall_{method.ret_type}(response_data, i);\n"
                 code += "\t}\n\n"
-            template = (Path("templates/java") / STUB_FILE).read_text()
+            template = (TEMPLATES_DIR / STUB_FILE).read_text()
             (out_dir / f"{model.name}Stub.java").write_text(
                 template
                 .replace("{__SERVICE_NAME__}", model.name)
@@ -275,7 +278,7 @@ class JavaCompiler(BaseCompiler):
     @classmethod
     def compile(cls, in_file: Path, out_dir: Path, root_dir: Path) -> None:
         # copy templates
-        for file in Path("templates/java").iterdir():
+        for file in TEMPLATES_DIR.iterdir():
             if file.suffix == ".java" and not file.stem.startswith("_"):
                 (out_dir / file.name).write_text(file.read_text())
         super().compile(in_file, out_dir, root_dir)
