@@ -118,7 +118,10 @@ int main() {
 
     rudp.listen(server_port, servicer);
 }
-//g++ server.cpp middleware/network/*.cpp middleware/protos/*.cpp -o server
+```
+```
+// from the server/ directory, run ...
+g++ server.cpp middleware/network/*.cpp middleware/protos/*.cpp -o server
 ```
 
 ##### `client.cpp` (demo client)
@@ -170,14 +173,10 @@ int main() {
     }
 }
 ```
-
-From the `server/` directory, run:
 ```
-// start server
-
-
+// from the server/ directory, run ...
 g++ client.cpp middleware/network/*.cpp middleware/protos/*.cpp -o client
-
+```
 
 #### Java
 
