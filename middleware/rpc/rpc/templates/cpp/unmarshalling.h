@@ -3,7 +3,7 @@
 #define BYTE 8
 #define LEN_SIZE 4
 #define INT_SIZE 4
-#define RAISE exit(EXIT_FAILURE)
+
 #pragma once
 
 int unmarshall_int(char* message, int& i) {
