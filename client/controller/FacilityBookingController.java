@@ -79,7 +79,6 @@ public class FacilityBookingController {
         try {
             // convert to Day structure
             Day[] days = convertListToDayArray(daysList);
-            System.out.println(Arrays.toString(days));
             resp = stub.queryFacility(facilityName,days);
             boundary.displayAvailability(facilityName,resp.availability(),daysList);
         } catch (Exception e) {

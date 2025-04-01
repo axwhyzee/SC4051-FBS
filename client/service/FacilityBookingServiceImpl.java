@@ -32,8 +32,33 @@ public class FacilityBookingServiceImpl implements FacilityBookingService {
 
     public FacilityBookingServiceImpl() {
         // Initialize facilities array
-        facilities = new Facility[]{
-            new Facility("Hall A", "Sports Hall", new Booking[] {})
+        facilities = new Facility[] {
+            new Facility(
+                "Hall A",
+                "Sports Hall",
+                new Booking[] {
+                    new Booking("Alice", new DayTime(Day.MONDAY, 10, 0), new DayTime(Day.MONDAY, 12, 0)),
+                    new Booking("Bob", new DayTime(Day.WEDNESDAY, 14, 30), new DayTime(Day.WEDNESDAY, 16, 0))
+                }
+            ),
+            new Facility(
+                "Conference Room 1",
+                "Conference Room",
+                new Booking[] {
+                    new Booking("Charlie", new DayTime(Day.TUESDAY, 9, 0), new DayTime(Day.TUESDAY, 11, 0)),
+                    new Booking("Dave", new DayTime(Day.THURSDAY, 13, 30), new DayTime(Day.THURSDAY, 15, 30)),
+                    new Booking("Eva", new DayTime(Day.FRIDAY, 10, 30), new DayTime(Day.FRIDAY, 12, 0))
+                }
+            ),
+            new Facility(
+                "Hall B",
+                "Sports Hall",
+                new Booking[] {
+                    new Booking("Frank", new DayTime(Day.MONDAY, 7, 0), new DayTime(Day.MONDAY, 8, 0)),
+                    new Booking("Grace", new DayTime(Day.FRIDAY, 18, 0), new DayTime(Day.FRIDAY, 19, 0)),
+                    new Booking("Hannah", new DayTime(Day.SUNDAY, 15, 0), new DayTime(Day.SUNDAY, 16, 0))
+                }
+            )
         };
 
         // Initialize availability array
@@ -53,8 +78,9 @@ public class FacilityBookingServiceImpl implements FacilityBookingService {
 
     @Override
     public AvailabilityResponse queryFacility(String facilityName, Day[] days) {
-        System.out.println(facilityName + " " + days);
-        return new AvailabilityResponse("hi", availability);
+        System.out.println("query facility");
+        
+        return new AvailabilityResponse("", availability);
     }
 
     @Override
