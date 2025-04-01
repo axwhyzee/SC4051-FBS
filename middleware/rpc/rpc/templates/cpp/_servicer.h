@@ -13,7 +13,7 @@ public:
      * Unmarshall raw RPC bytestream and call the corresponding 
      * method of the underlying service with the unmarshalled args.
      */
-    int callback(char* request_data, int request_len, char* response_data) {}
+    int callback(char* request_data, int request_len, char* response_data);
 
 private:
     int server_socket;
