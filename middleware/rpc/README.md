@@ -20,6 +20,29 @@ pip install .  # installs rpc package
 
 ### Compile Interface File into Stubs
 
+Paste the following into `proto.idl`
+```
+enum Day {
+    MONDAY;
+    TUESDAY;
+    WEDNESDAY;
+    THURSDAY;
+    FRIDAY;
+    SATURDAY;
+    SUNDAY;
+};
+
+struct DayTime {
+    Day day;
+    int hour;
+    int minute;
+};
+
+interface TestService {
+    sequence<DayTime> generate_noon_daytimes(sequence<Day> days);
+};
+```
+
 #### C++
 
 ```
@@ -27,6 +50,134 @@ mkdir ../../client
 source env/bin/activate
 rpc_tools --infile=proto.idl --outdir=../../server --lang=cpp
 ```
+
+After compilation, the C++ project structure will look like this:
+```
+|
+|-- server/
+|   |
+|   |-- middleware
+|   |   |-- protos
+|   |   |   |-- marshalling.cpp
+|   |   |   |-- marshalling.h
+|   |   |   |-- ...
+|   |   |
+|   |   |-- network
+|   |       |-- protocol.cpp
+|   |       |-- protocol.h
+|   |       |-- ...
+|   |   
+|   |-- server.cpp // create yourself
+|   |-- ...
+|
+|-- middleware/
+|-- client/
+```
+
+##### `server.cpp` (demo server)
+```
+#include <vector>
+#include <iostream>
+#include "middleware/network/protocol.h"
+#include "middleware/protos/stubs.h"
+#include "middleware/protos/proto_types.h"
+
+
+/**
+ * Concrete TestService implementation.
+ *
+ * Whenever a UDP packet is received by RUDP, it calls the Servicer 
+ * via callback to first unmarshall the RPC request, then dispatch the
+ * unmarshalled arguments to the corresponding method implemented by
+ * this ConcreteTestService class.
+ *
+ * Return values of this ConcreteTestService are mashalled by the
+ * Servicer, and sent as response back to the client via RUDP.
+ */
+class ConcreteTestService : public TestService {
+public:
+    std::vector<DayTime> generate_noon_daytimes(std::vector<Day> days) {
+        std::vector<DayTime> result;
+        for (Day day : days) {
+            DayTime daytime;
+            daytime.day = day;
+            daytime.hour = 12;
+            daytime.minute = 0;
+            result.push_back(daytime);
+        }
+        return result;
+    }
+};
+
+
+int main() {
+    int server_port = 5432;
+    ConcreteTestService service;
+    TestServiceServicer servicer = TestServiceServicer(service);
+    RUDP rudp = RUDP();
+
+    rudp.listen(server_port, servicer);
+}
+//g++ server.cpp middleware/network/*.cpp middleware/protos/*.cpp -o server
+```
+
+##### `client.cpp` (demo client)
+```
+#include <iostream>
+#include <cstring>      
+#include <netinet/in.h> 
+#include <arpa/inet.h>
+#include "middleware/network/protocol.h"
+#include "middleware/protos/stubs.h"
+
+
+# define LOG(msg) std::cout << msg << ' ';
+# define LOG_LINE(msg) std::cout << msg << std::endl;
+
+
+int main() {
+    // configure server addr
+    int server_port = 5432;
+    const char* server_ip = "127.0.0.1";
+    sockaddr_in server_addr;
+
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(server_port);
+    if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) <= 0) {
+        std::cerr << "Invalid IP address" << std::endl;
+        return 1;
+    }
+
+    // construct and send RPC request
+    RUDP rudp = RUDP();
+    TestServiceStub stub = TestServiceStub(server_addr, rudp);
+    std::vector<Day> days = {MONDAY, FRIDAY, SUNDAY};
+    std::vector<DayTime> result = stub.generate_noon_daytimes(days);
+
+    LOG("Result length: ");
+    LOG_LINE(result.size());
+
+    // print response
+    for (DayTime item : result) {
+        LOG_LINE("-----------");
+        LOG("Day:");
+        LOG_LINE(item.day);
+        LOG("HOUR:");
+        LOG_LINE(item.hour);
+        LOG("MINUTE:");
+        LOG_LINE(item.minute);
+    }
+}
+```
+
+From the `server/` directory, run:
+```
+// start server
+
+
+g++ client.cpp middleware/network/*.cpp middleware/protos/*.cpp -o client
+
 
 #### Java
 
@@ -36,7 +187,7 @@ source env/bin/activate
 rpc_tools --infile=proto.idl --outdir=../../client --lang=java
 ```
 
-After compilation, the project structure will look like this:
+After compilation, the Java project structure will look like this:
 ```
 |
 |-- client/
