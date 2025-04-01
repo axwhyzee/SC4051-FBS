@@ -114,7 +114,7 @@ public:
 
 int main() {
     int server_port = 5432;
-    ConcreteTestService service;
+    ConcreteTestService service = ConcreteTestService();
     TestServiceServicer servicer = TestServiceServicer(service);
     RUDP rudp = RUDP();
 

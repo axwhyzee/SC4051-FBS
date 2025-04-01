@@ -250,10 +250,10 @@ class JavaCompiler(BaseCompiler):
                         code += f"\t\tMarshaller.marshall_{arg.type}(request_data, i, {arg.name});\n"
                 code += f"\t\tbyte[] response_data = _send(new Bytes(request_data, i[0])).bytes();\n"
                 code += f"\t\ti[0] = 0;\n"
+                code += f"\t\tUnmarshaller.unmarshall_int(response_data, i);  // strip method_id\n"
                 if is_sequence(method.ret_type):
                     nested_type = get_nested_type(method.ret_type)
                     translated_type = _translate_attr_type(method.ret_type)
-                    code += f"\t\tUnmarshaller.unmarshall_int(response_data, i);  // strip method_id\n"
                     code += f"\t\tint response__seq__len = Unmarshaller.unmarshall_int(response_data, i);\n"
                     code += f"\t\t{translated_type} response__seq = new {nested_type}[response__seq__len];\n"
                     code += f"\t\tfor (int j=0; j<response__seq__len; j++)\n"
