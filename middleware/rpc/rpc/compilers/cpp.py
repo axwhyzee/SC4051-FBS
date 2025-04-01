@@ -233,7 +233,7 @@ class CPPCompiler(BaseCompiler):
                 code += f"\tvirtual {_translate_attr_type(method.ret_type)} "
                 code += f"{method.name}("
                 code += ", ".join(
-                    [_translate_attr(attr) for attr in method.args]
+                    [_translate_attr(attr) for attr in method.args] + ["sockaddr_in client_addr"]
                 )
                 code += ") = 0;\n"
             code += "};\n\n"
@@ -262,7 +262,7 @@ class CPPCompiler(BaseCompiler):
             code += "};\n\n"
             return code
         
-        def create_service_stub():
+        def create_client_stub():
             code = ""
             for method in model.methods:
                 code += f"{_translate_attr_type(method.ret_type)} {model.name}Stub::{method.name}("
@@ -328,6 +328,7 @@ class CPPCompiler(BaseCompiler):
                     else:
                         code += f"\t\t\t{translated_arg_type} {arg_name} = unmarshall_{arg.type}(request_data, i);\n"
                     arg_names.append(arg_name)
+                arg_names.append("client_addr")
                 code += f'\t\t\t{translated_ret_type} {method.name}__result = service.{method.name}({", ".join(arg_names)});\n'
                 code += f"\t\t\tmarshall_int(response_data, j, {cls.method_counter});\n"
                 cls.method_counter += 1
@@ -358,7 +359,7 @@ class CPPCompiler(BaseCompiler):
             f.write(create_servicer_header())
 
         with open(out_dir / STUBS_CPP_FILE, "a") as f:
-            f.write(create_service_stub())
+            f.write(create_client_stub())
             f.write(create_servicer())
             
 

@@ -1,4 +1,4 @@
-int {__SERVICE_NAME__}Servicer::callback(char* request_data, int request_len, char* response_data) {
+int {__SERVICE_NAME__}Servicer::callback(char* request_data, int request_len, char* response_data, sockaddr_in client_addr) {
     int i, j;
     i = j = 0;
     char arg_id;
