@@ -3,6 +3,9 @@ package service;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import middleware.network.RUDP;
 
 import middleware.protos.FacilityBookingService;
 import middleware.protos.AvailabilityResponse;
@@ -18,7 +21,7 @@ import middleware.protos.Booking;
 
 import boundary.FacilityBookingBoundary;
 
-// import middleware.protos.FacilityBookingServiceStub;
+import middleware.protos.FacilityBookingServiceStub;
 
 import java.util.List;
 
@@ -27,7 +30,7 @@ public class FacilityBookingServiceImpl {
     // client stub to communicate with server
     private String user; 
     private FacilityBookingBoundary boundary = new FacilityBookingBoundary();
-    // private FacilityBookingServiceStub stub; 
+    private FacilityBookingServiceStub stub; 
 
     private Facility exampleFacility = new Facility(
         "Hall A",
@@ -74,22 +77,27 @@ public class FacilityBookingServiceImpl {
         new Interval(new DayTime(Day.WEDNESDAY, 16, 0), new DayTime(Day.WEDNESDAY, 20, 0))  // After Bob's booking
     };
 
-    private Interval[] subscribedAvailability = null; 
-    private String subscribedFacility = ""; 
+    private Interval[] subscribedAvailability ={
+        new Interval(new DayTime(Day.MONDAY, 8, 0), new DayTime(Day.MONDAY, 10, 0)),  // Before Alice's booking
+        new Interval(new DayTime(Day.MONDAY, 12, 0), new DayTime(Day.MONDAY, 20, 0)), // After Alice's booking
+        new Interval(new DayTime(Day.WEDNESDAY, 8, 0), new DayTime(Day.WEDNESDAY, 14, 30)), // Before Bob's booking
+        new Interval(new DayTime(Day.WEDNESDAY, 16, 0), new DayTime(Day.WEDNESDAY, 20, 0))  // After Bob's booking
+    };
+    private String subscribedFacility = "Hall 2"; 
 
     // Constructor
     public FacilityBookingServiceImpl(String user) {
         this.user = user;
-        // try {
-        //     // configure client
-        //     InetAddress localhost = InetAddress.getLocalHost();
-        //     RUDP rudp = new RUDP();
-        //     int port = 5432;
-        //     FacilityBookingServiceStub stub = new FacilityBookingServiceStub(localhost, port, rudp);   
-        // } catch (UnknownHostException e) {
-        //     System.out.println("Localhost could not be resolved");
-        // }
-        // this.stub = stub;
+        try {
+            // configure client
+            InetAddress localhost = InetAddress.getLocalHost();
+            RUDP rudp = new RUDP();
+            int port = 5432;
+            FacilityBookingServiceStub stub = new FacilityBookingServiceStub(localhost, port, rudp);   
+        } catch (UnknownHostException e) {
+            System.out.println("Localhost could not be resolved");
+        }
+        this.stub = stub;
     }
 
     
