@@ -6,11 +6,12 @@ Language-agnostic command line tool to compile interface file into language spec
 
 A parser generates logical models of interface components from the interface file. Next, language-specific compilers, build these components part by part to generate RPC stubs.
 
-## Quickstart
+
+# C++ Demo
 
 _Note: Run all commands from the `SC4051-FBS/middleware/rpc` directory_
 
-### Install RPC tools
+## Install RPC tools
 ```
 # setup python env
 python -m venv env
@@ -18,7 +19,7 @@ source env/bin/activate
 pip install .  # installs rpc package
 ```
 
-### Compile Interface File into Stubs
+## Compile Interface File into Stubs
 
 Paste the following into `proto.idl`
 ```
@@ -43,10 +44,9 @@ interface TestService {
 };
 ```
 
-#### C++
-
+Compile interface file
 ```
-mkdir ../../client
+mkdir ../../server
 source env/bin/activate
 rpc_tools --infile=proto.idl --outdir=../../server --lang=cpp
 ```
@@ -74,7 +74,9 @@ After compilation, the C++ project structure will look like this:
 |-- client/
 ```
 
-##### `server.cpp` (demo server)
+## Implement Server
+
+Copy the demo server code below into `server/server.cpp`
 ```
 #include <vector>
 #include <iostream>
@@ -119,10 +121,15 @@ int main() {
     rudp.listen(server_port, servicer);
 }
 ```
+
+Start server
 ```
 // from the server/ directory, run ...
 g++ server.cpp middleware/network/*.cpp middleware/protos/*.cpp -o server
 ```
+
+## Implement Client
+Copy the demo client code below into `server/client.cpp`
 
 ##### `client.cpp` (demo client)
 ```
@@ -173,13 +180,41 @@ int main() {
     }
 }
 ```
+
+Start client
 ```
 // from the server/ directory, run ...
 g++ client.cpp middleware/network/*.cpp middleware/protos/*.cpp -o client
 ```
 
-#### Java
+# Java Demo
 
+## Compile Interface File into Stubs
+
+Paste the following into `proto.idl`
+```
+enum Day {
+    MONDAY;
+    TUESDAY;
+    WEDNESDAY;
+    THURSDAY;
+    FRIDAY;
+    SATURDAY;
+    SUNDAY;
+};
+
+struct DayTime {
+    Day day;
+    int hour;
+    int minute;
+};
+
+interface TestService {
+    sequence<DayTime> generate_noon_daytimes(sequence<Day> days);
+};
+```
+
+Compile interface file
 ```
 mkdir ../../client
 source env/bin/activate
@@ -208,6 +243,10 @@ After compilation, the Java project structure will look like this:
 |-- middleware/
 |-- server/
 ```
+
+## Implement Client
+
+Paste the client demo code below into `client/TestClient.java`
 
 ```
 // Example Java client (TestClient.java)
