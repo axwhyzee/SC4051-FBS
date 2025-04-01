@@ -109,7 +109,7 @@ class CPPCompiler(BaseCompiler):
                 f.write(code)
 
         def create_marshalling():
-            code = f"{model.name} marshall_{model.name}(char* message, int& i, {model.name} val) {{\n"
+            code = f"void marshall_{model.name}(char* message, int& i, {model.name} val) {{\n"
             for attr in model.attrs:
                 if is_sequence(attr.type):
                     # sequences
