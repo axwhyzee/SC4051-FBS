@@ -79,7 +79,8 @@ interface facilityMonitoringService {
     // monitor interval --> in days
 
     void unregisterFromMonitoring(string userName, string facilityName)
-}}
+}
+
 interface FacilityBookingClient {
     Response terminate();
     
@@ -88,3 +89,4 @@ interface FacilityBookingClient {
 
 interface TestService {
     sequence<DayTime> generate_noon_daytimes(sequence<Day> days);
+};
