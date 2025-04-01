@@ -105,16 +105,14 @@ public class FacilityBookingServiceImpl {
         
         AvailabilityResponse resp = null;
         
-        // try {
-        //     // convert to Day structure
-        //     Day[] days = convertListToDayArray(daysList);
-        //     resp = stub.queryFacility(facilityName,days);
-        //     boundary.displayAvailability(facilityName,resp.availability(),daysList);
-        // } catch (UnknownHostException e) {
-        //     System.out.println("Localhost could not be resolved");
-        // } catch (Exception e) {
-        //     System.out.println("An error occurred during the request: " + e.getMessage());
-        // }
+        try {
+            // convert to Day structure
+            Day[] days = convertListToDayArray(daysList);
+            resp = stub.queryFacility(facilityName,days);
+            boundary.displayAvailability(facilityName,resp.availability(),daysList);
+        } catch (Exception e) {
+            System.out.println("An error occurred during the request: " + e.getMessage());
+        }
         
         boundary.displayAvailability(facilityName,exampleAvailability,daysList); // for testing
 
@@ -126,18 +124,16 @@ public class FacilityBookingServiceImpl {
         
         BookResponse resp = null;
         
-        // try {
-        //     resp = stub.bookFacility(user,convertToDayTime(start),convertToDayTime(end));
-        //     if (resp.bookingId() > 0){
-        //         System.out.println("Booking successfully made! Your booking confirmation ID: " + resp.bookingId());
-        //     } else {
-        //         System.out.println("Booking failed. Please try again.");
-        //     }
-        // } catch (UnknownHostException e) {
-        //     System.out.println("Localhost could not be resolved");
-        // } catch (Exception e) {
-        //     System.out.println("An error occurred during the request: " + e.getMessage());
-        // }
+        try {
+            resp = stub.bookFacility(user,convertToDayTime(start),convertToDayTime(end));
+            if (resp.bookingId() > 0) {
+                System.out.println("Booking successfully made! Your booking confirmation ID: " + resp.bookingId());
+            } else {
+                System.out.println("Booking failed. Please try again.");
+            }
+        } catch (Exception e) {
+            System.out.println("An error occurred during the request: " + e.getMessage());
+        }
  
         // Testing
         DayTime startTime = convertToDayTime(start); 
