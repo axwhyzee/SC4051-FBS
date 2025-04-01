@@ -101,23 +101,17 @@ public class FacilityBookingController {
             System.out.println("An error occurred during the request: " + e.getMessage());
         }
  
-        // // Testing
-        // DayTime startTime = convertToDayTime(start); 
-        // DayTime endTime = convertToDayTime(end); 
-        // System.out.println(String.format("%s %02d:%02d, %s %02d:%02d", startTime.day(), startTime.hour(), startTime.minute(), endTime.day(), endTime.hour(), endTime.minute()));
     }
 
     
     public void changeBooking(int bookingId, int offset) {
         Response resp = null;
         
-        // try {
-        //     resp = stub.changeBooking(bookingId,offset);
-        // } catch (UnknownHostException e) {
-        //     System.out.println("Localhost could not be resolved");
-        // } catch (Exception e) {
-        //     System.out.println("An error occurred during the request: " + e.getMessage());
-        // }
+        try {
+            resp = stub.changeBooking(bookingId,offset);
+        } catch (Exception e) {
+            System.out.println("An error occurred during the request: " + e.getMessage());
+        }
 
     }
     
