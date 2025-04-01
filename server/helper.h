@@ -3,8 +3,8 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
-#include "protos/proto_types.h"
-#include "protos/stubs.h"
+#include "middleware/protos/proto_types.h"
+#include "middleware/protos/stubs.h"
 
 int convertDayTimeToInt(DayTime time);
 DayTime convertIntToDayTime(int time);

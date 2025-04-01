@@ -5,7 +5,7 @@ int MN_TIME = convertDayTimeToInt({(Day)0, 0, 0});
 int MX_TIME = convertDayTimeToInt({(Day)6, 23, 59});
 
 
-vector<Interval> get_availability(Facility* facility) {
+vector<Interval> get_availability(Facility_class* facility) {
     vector<pair<int, int>> bookings;
     for (auto &booking : facility->bookings) {
         int start = convertDayTimeToInt(booking.start);
@@ -37,7 +37,7 @@ vector<Interval> get_availability(Facility* facility) {
     return res;
 }
 
-bool check_availability(Facility* facility, int start_time, int end_time) {
+bool check_availability(Facility_class* facility, int start_time, int end_time) {
     vector<pair<int, int>> bookings;
     for (auto &booking : facility->bookings) {
         int start = convertDayTimeToInt(booking.start);
@@ -56,7 +56,7 @@ bool check_availability(Facility* facility, int start_time, int end_time) {
     return true;
 }
 
-bool check_change_booking_availability(Facility* facility, int target_bookingId, int offset) {
+bool check_change_booking_availability(Facility_class* facility, int target_bookingId, int offset) {
     vector<pair<int, int>> bookings;
     for (auto &booking : facility->bookings) {
 
@@ -79,7 +79,7 @@ bool check_change_booking_availability(Facility* facility, int target_bookingId,
     return true;
 }
 
-bool check_extend_booking_availability(Facility* facility, int target_bookingId, int minutes) {
+bool check_extend_booking_availability(Facility_class* facility, int target_bookingId, int minutes) {
     vector<pair<int, int>> bookings;
     for (auto &booking : facility->bookings) {
 
@@ -101,19 +101,46 @@ bool check_extend_booking_availability(Facility* facility, int target_bookingId,
     return true;
 }
 
-AvailabilityResponse Facilities::queryFacility(string facilityName, vector<Day> days ) {
+bool send_callback(vector<Interval> availabilities, Monitor* monitor, string facilityName) {
+    // Send availabilities of facility to client
+    AvailabilityResponse res;
+    res.error = facilityName;
+    res.availability = availabilities;
+    char* request_data;
+    char* response_data;
+    int i = 0;
+    int j = 0;
+    sockaddr_in client_addr = monitor->client_addr;
+
+    marshall_int(request_data, i, 8);
+    marshall_AvailabilityResponse(request_data, i, res);
+
+
+    // temp RUDP to send callback response
+    RUDP callback_server;
+
+    callback_server.send(client_addr, request_data, i, response_data, j);
+    if (j < 0) {
+        return false;
+    }
+    return true;
+}
+
+AvailabilityResponse Facilities::queryFacility(string facilityName, vector<Day> days, sockaddr_in client_addr) {
+    cout << "queryFacility called"; 
     AvailabilityResponse res = {};
     if (facilities.find(facilityName) == facilities.end()) {
         res.error = "No such facility name.";
         return res;
     } else {
-        Facility* facility = facilities[facilityName];
+        Facility_class* facility = facilities[facilityName];
         res.availability = get_availability(facility);
         res.error = "success";
         return res;
     }
 }
-BookResponse Facilities::bookFacility(string facilityName, string user, DayTime start, DayTime end) {
+BookResponse Facilities::bookFacility(string facilityName, string user, DayTime start, DayTime end, sockaddr_in client_addr) {
+    cout << "bookFacility called";
     int start_time = convertDayTimeToInt(start);
     int end_time = convertDayTimeToInt(end);
     BookResponse res;
@@ -127,7 +154,7 @@ BookResponse Facilities::bookFacility(string facilityName, string user, DayTime 
         res.bookingId = -1;
         return res;
     }
-    Facility* facility = facilities[facilityName];
+    Facility_class* facility = facilities[facilityName];
     if (!check_availability(facility, start_time, end_time)) {
         res.error = facilityName + " not available at time";
         res.bookingId = -1;
@@ -138,10 +165,12 @@ BookResponse Facilities::bookFacility(string facilityName, string user, DayTime 
         allBookings[cur_booking_id] = &newBooking;
         res.error = "Success";
         res.bookingId = cur_booking_id++;
+        facility->checkMonitors();
         return res;
     }
 }
-Response Facilities::changeBooking(int bookingId, int offset) {
+Response Facilities::changeBooking(int bookingId, int offset, sockaddr_in client_addr) {
+    cout << "changeBooking called";
     Response res;
     if (allBookings.find(bookingId) == allBookings.end()) {
         res.error = "No such booking ID";
@@ -149,10 +178,11 @@ Response Facilities::changeBooking(int bookingId, int offset) {
     }
     Booking* booking = allBookings[bookingId];
     
-    Facility* facility = facilities[booking->facilityName];
+    Facility_class* facility = facilities[booking->facilityName];
     
     if (!check_change_booking_availability(facility, bookingId, offset)) {
         res.error = "Timing not available";
+        return res;
     } else {
         for (auto &booking : facility->bookings) {
             if (booking.bookingId == bookingId) {
@@ -162,12 +192,13 @@ Response Facilities::changeBooking(int bookingId, int offset) {
                 booking.end = convertIntToDayTime(newEnd);
             }
         }
-
+        facility->checkMonitors();
         res.error = "success";
         return res;
     }
 }
-Response Facilities::subscribe(std::string facilityName, int minutes, string client_ip, int client_port) {
+Response Facilities::subscribe(std::string facilityName, int minutes, sockaddr_in client_addr) {
+    cout << "subscribe called";
     Response res;
     if (facilities.find(facilityName) == facilities.end()) {
         res.error = "No such facility name.";
@@ -177,16 +208,17 @@ Response Facilities::subscribe(std::string facilityName, int minutes, string cli
     time_t start_time;
     time(&start_time);
 
-    Monitor* newMonitor = new Monitor(client_ip, client_port, start_time, minutes);
+    Monitor* newMonitor = new Monitor(client_addr, start_time, minutes);
 
-    Facility* facility = facilities[facilityName];
+    Facility_class* facility = facilities[facilityName];
 
     facility->monitors.push_back(newMonitor);
 
     res.error = "success";
     return res;
 }
-Response Facilities::extendBooking(int bookingId, int minutes) {
+Response Facilities::extendBooking(int bookingId, int minutes, sockaddr_in client_addr) {
+    cout << "extendBooking called";
     Response res;
     if (allBookings.find(bookingId) == allBookings.end()) {
         res.error = "No such booking ID";
@@ -194,10 +226,11 @@ Response Facilities::extendBooking(int bookingId, int minutes) {
     }
     Booking* booking = allBookings[bookingId];
     
-    Facility* facility = facilities[booking->facilityName];
+    Facility_class* facility = facilities[booking->facilityName];
     
     if (!check_extend_booking_availability(facility, bookingId, minutes)) {
         res.error = "Timing not available";
+        return res;
     } else {
         for (auto &booking : facility->bookings) {
             if (booking.bookingId == bookingId) { 
@@ -205,12 +238,13 @@ Response Facilities::extendBooking(int bookingId, int minutes) {
                 booking.end = convertIntToDayTime(newEnd);
             }
         }
-
+        facility->checkMonitors();
         res.error = "success";
         return res;
     }
 }
-FacilitiesResponse Facilities::viewFacilities() {
+FacilitiesResponse Facilities::viewFacilities(sockaddr_in client_addr) {
+    cout << "viewFacilities called";
     FacilitiesResponse res;
 
     res.error = "success";
@@ -218,23 +252,24 @@ FacilitiesResponse Facilities::viewFacilities() {
     vector<Facility> facility_arr;
 
     for (auto &p : facilities) {
-        facility_arr.push_back(*p.second);
+        facility_arr.push_back(p.second->get_facility_struct());
     }
     res.facilities = facility_arr;
 
     return res;
 }
 
-void Facility::checkMonitors() {
+void Facility_class::checkMonitors() {
     vector<int> to_remove;
 
     int monitors_len = monitors.size();
     vector<Monitor*> newMonitors;
+    vector<Interval> availabilities = get_availability(this);
     for (int i = 0; i < monitors_len; i++) {
         if (monitors[i]->expired()) {
             to_remove.push_back(i);
         } else {
-            send_callback(this, monitors[i]);
+            send_callback(availabilities, monitors[i], facilityName);
             newMonitors.push_back(monitors[i]);
         }
     }
@@ -242,9 +277,6 @@ void Facility::checkMonitors() {
     this->monitors = newMonitors;
 }
 
-bool send_callback(Facility* facility, Monitor* monitor) {
-    // TODO
-    // Send availabilities of facility to client
-}
+
 
 

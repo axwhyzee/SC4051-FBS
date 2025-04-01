@@ -3,8 +3,10 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
-#include "protos/proto_types.h"
-#include "protos/stubs.h"
+#include "middleware/protos/proto_types.h"
+#include "middleware/protos/stubs.h"
+#include "middleware/network/protocol.h"
+#include "facilities.h"
 
 using namespace std;
 
@@ -12,15 +14,14 @@ using namespace std;
 int port;
 
 int main(int argc, char** argv) {
-    cout << "Usage: server <port>";
-    if (argc < 2) port = 80;
+    cout << "Usage: server <port>\n";
+    if (argc < 2) port = 8888;
     else port = stoi(argv[1]);
 
+    Facilities facilitiesBookingService;
+    FacilityBookingServiceServicer servicer = FacilityBookingServiceServicer(facilitiesBookingService);
+    RUDP rudp = RUDP();
 
-    // TODO start server listening on PORT
-
-    cout << "Server listening on PORT " << port << '\n';
-
-
+    rudp.listen(port, servicer);
 }
 

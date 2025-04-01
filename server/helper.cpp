@@ -8,6 +8,8 @@ int convertDayTimeToInt(DayTime time) {
     res += time.minute;
     res += time.hour * 60;
     res += time.day * 24 * 60;
+
+    return res;
 }
 DayTime convertIntToDayTime(int time) {
     DayTime res;
