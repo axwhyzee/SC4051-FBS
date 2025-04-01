@@ -33,7 +33,7 @@ public class RUDP implements Protocol {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
                 Bytes received_bytes = new Bytes(packet.getData(), packet.getLength());
-
+                
                 try {
                     // run callback and send response
                     Bytes result_bytes = servicer.callback(received_bytes, BUFFER_SIZE);
@@ -69,7 +69,8 @@ public class RUDP implements Protocol {
             socket.send(packet);
 
             // receive UDP packet as response
-            packet = new DatagramPacket(data.bytes(), data.length(), addr, port);
+            byte[] buffer = new byte[BUFFER_SIZE];
+            packet = new DatagramPacket(buffer, BUFFER_SIZE, addr, port);
             socket.receive(packet);
             return new Bytes(packet.getData(), packet.getLength());
         } catch (IOException e) {

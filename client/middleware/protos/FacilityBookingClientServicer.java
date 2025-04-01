@@ -16,16 +16,20 @@ public class FacilityBookingClientServicer implements Servicer {
         int method_id = Unmarshaller.unmarshall_int(message, i);
 
         switch (method_id) {
-			case 1:
+			case 7:
 				Response terminate__result = service.terminate();
+				i[0] = 0;
+				Marshaller.marshall_int(response, i, 7);
 				Marshaller.marshall_Response(response, i, terminate__result);
 				return i[0];
-			case 2:
-				int availability__2__arg__len = Unmarshaller.unmarshall_int(message, i);
-				Interval[] availability__2__arg = new Interval[availability__2__arg__len];
-				for (int j=0; j<availability__2__arg__len; j++)
-					availability__2__arg[j] = Unmarshaller.unmarshall_Interval(message, i);
-				Response publish__result = service.publish(availability__2__arg);
+			case 8:
+				int availability__8__arg__len = Unmarshaller.unmarshall_int(message, i);
+				Interval[] availability__8__arg = new Interval[availability__8__arg__len];
+				for (int j=0; j<availability__8__arg__len; j++)
+					availability__8__arg[j] = Unmarshaller.unmarshall_Interval(message, i);
+				Response publish__result = service.publish(availability__8__arg);
+				i[0] = 0;
+				Marshaller.marshall_int(response, i, 8);
 				Marshaller.marshall_Response(response, i, publish__result);
 				return i[0];
 			default:

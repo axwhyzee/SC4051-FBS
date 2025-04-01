@@ -23,6 +23,8 @@ public class FacilityBookingServiceServicer implements Servicer {
 				for (int j=0; j<days__1__arg__len; j++)
 					days__1__arg[j] = Unmarshaller.unmarshall_Day(message, i);
 				AvailabilityResponse queryFacility__result = service.queryFacility(facilityName__1__arg, days__1__arg);
+				i[0] = 0;
+				Marshaller.marshall_int(response, i, 1);
 				Marshaller.marshall_AvailabilityResponse(response, i, queryFacility__result);
 				return i[0];
 			case 2:
@@ -30,28 +32,38 @@ public class FacilityBookingServiceServicer implements Servicer {
 				DayTime start__2__arg = Unmarshaller.unmarshall_DayTime(message, i);
 				DayTime end__2__arg = Unmarshaller.unmarshall_DayTime(message, i);
 				BookResponse bookFacility__result = service.bookFacility(user__2__arg, start__2__arg, end__2__arg);
+				i[0] = 0;
+				Marshaller.marshall_int(response, i, 2);
 				Marshaller.marshall_BookResponse(response, i, bookFacility__result);
 				return i[0];
 			case 3:
 				int bookingId__3__arg = Unmarshaller.unmarshall_int(message, i);
 				int offset__3__arg = Unmarshaller.unmarshall_int(message, i);
 				Response changeBooking__result = service.changeBooking(bookingId__3__arg, offset__3__arg);
+				i[0] = 0;
+				Marshaller.marshall_int(response, i, 3);
 				Marshaller.marshall_Response(response, i, changeBooking__result);
 				return i[0];
 			case 4:
 				String facilityName__4__arg = Unmarshaller.unmarshall_string(message, i);
 				int minutes__4__arg = Unmarshaller.unmarshall_int(message, i);
 				Response subscribe__result = service.subscribe(facilityName__4__arg, minutes__4__arg);
+				i[0] = 0;
+				Marshaller.marshall_int(response, i, 4);
 				Marshaller.marshall_Response(response, i, subscribe__result);
 				return i[0];
 			case 5:
 				int bookingId__5__arg = Unmarshaller.unmarshall_int(message, i);
 				int minutes__5__arg = Unmarshaller.unmarshall_int(message, i);
 				Response extendBooking__result = service.extendBooking(bookingId__5__arg, minutes__5__arg);
+				i[0] = 0;
+				Marshaller.marshall_int(response, i, 5);
 				Marshaller.marshall_Response(response, i, extendBooking__result);
 				return i[0];
 			case 6:
 				FacilitiesResponse viewFacilities__result = service.viewFacilities();
+				i[0] = 0;
+				Marshaller.marshall_int(response, i, 6);
 				Marshaller.marshall_FacilitiesResponse(response, i, viewFacilities__result);
 				return i[0];
 			default:

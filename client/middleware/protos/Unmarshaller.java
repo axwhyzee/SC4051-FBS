@@ -38,7 +38,8 @@ public class Unmarshaller {
 			case 7:
 				return Day.SUNDAY;
 			default:
-				throw new EnumConstantNotPresentException(Day.class, "Invalid ordinal value: " + enum_id);		}
+				throw new EnumConstantNotPresentException(Day.class, "Invalid ordinal value: " + enum_id);
+		}
 	}
 
 	public static DayTime unmarshall_DayTime(byte[] message, int[] i) {
