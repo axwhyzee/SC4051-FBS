@@ -156,7 +156,7 @@ public class FacilityBookingController {
        
     }
 
-    
+    // merge with subscribe
     public void viewSubscribedAvailability() {
         
         
