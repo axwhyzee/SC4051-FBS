@@ -4,7 +4,7 @@ import middleware.network.RUDP;
 import middleware.protos.*;
 
 
-public class Client {
+public class ClientTest {
     public static void main(String args[]) {
         try {
             // configure RUDP client

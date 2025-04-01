@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 import boundary.FacilityBookingBoundary;
-import service.FacilityBookingServiceImpl;
+import controller.FacilityBookingController;
 
 public class Main {
     public static void main(String[] args) {
@@ -27,7 +27,7 @@ public class Main {
         }
 
         // Inititate Service
-        FacilityBookingServiceImpl service = new FacilityBookingServiceImpl(userName); 
+        FacilityBookingController service = new FacilityBookingController(userName); 
 
         while (true) {
             boundary.displayMainMenu();
