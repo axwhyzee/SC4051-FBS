@@ -26,6 +26,7 @@ import middleware.protos.FacilityBookingServiceStub;
 import java.util.List;
 
 public class FacilityBookingServiceImpl implements FacilityBookingService {
+    // Note that all functions sends dummy data
 
     private Facility[] facilities; // An array of available facilities
     private Interval[] availability; // An array of available intervals
@@ -85,11 +86,12 @@ public class FacilityBookingServiceImpl implements FacilityBookingService {
 
     @Override
     public BookResponse bookFacility(String user, DayTime start, DayTime end) {
+        System.out.println("book facility");
         int bookingId = 100; 
         BookResponse resp; 
 
         // successful
-        resp = new BookResponse("sup", bookingId);
+        resp = new BookResponse("", bookingId);
 
         // Fail
         // resp = new BookResponse("Booking Failed", -1);

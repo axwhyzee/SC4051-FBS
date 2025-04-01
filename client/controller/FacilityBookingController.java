@@ -67,8 +67,6 @@ public class FacilityBookingController {
             System.out.println("An error occurred during the request: " + e.getMessage());
         }
 
-        // boundary.displayFacilityDetails(facilities); // for testing
-
     }
 
     
@@ -84,9 +82,6 @@ public class FacilityBookingController {
         } catch (Exception e) {
             System.out.println("An error occurred during the request: " + e.getMessage());
         }
-        
-        // boundary.displayAvailability(facilityName,exampleAvailability,daysList); // for testing
-
 
     }
 
@@ -97,7 +92,6 @@ public class FacilityBookingController {
         
         try {
             resp = stub.bookFacility(user,convertToDayTime(start),convertToDayTime(end));
-            System.out.print(resp.error());
             if (resp.bookingId() > 0) {
                 System.out.println("Booking successfully made! Your booking confirmation ID: " + resp.bookingId());
             } else {
@@ -107,10 +101,10 @@ public class FacilityBookingController {
             System.out.println("An error occurred during the request: " + e.getMessage());
         }
  
-        // Testing
-        DayTime startTime = convertToDayTime(start); 
-        DayTime endTime = convertToDayTime(end); 
-        System.out.println(String.format("%s %02d:%02d, %s %02d:%02d", startTime.day(), startTime.hour(), startTime.minute(), endTime.day(), endTime.hour(), endTime.minute()));
+        // // Testing
+        // DayTime startTime = convertToDayTime(start); 
+        // DayTime endTime = convertToDayTime(end); 
+        // System.out.println(String.format("%s %02d:%02d, %s %02d:%02d", startTime.day(), startTime.hour(), startTime.minute(), endTime.day(), endTime.hour(), endTime.minute()));
     }
 
     
