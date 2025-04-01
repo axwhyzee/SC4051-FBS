@@ -52,5 +52,5 @@ public:
     int get_buffer_size();
 
 private:
-    static constexpr int BUFFER_SIZE = 2048;
+    static const int BUFFER_SIZE = 2048;
 };
