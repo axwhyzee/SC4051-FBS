@@ -18,8 +18,10 @@ TYPES_FILE = "proto_types.h"
 # files to write to
 STUBS_HEADER_FILE = "stubs.h"
 STUBS_CPP_FILE = "stubs.cpp"
-MARSHALLING_FILE = "marshalling.h"
-UNMARSHALLING_FILE = "unmarshalling.h"
+MARSHALLING_HEADER_FILE = "marshalling.h"
+MARSHALLING_CPP_FILE = "marshalling.cpp"
+UNMARSHALLING_HEADER_FILE = "unmarshalling.h"
+UNMARSHALLING_CPP_FILE = "unmarshalling.cpp"
 
 # templates files to read from
 TEMPLATE_SERVICER_CPP_FILE = "_servicer.cpp"
@@ -83,6 +85,12 @@ class CPPCompiler(BaseCompiler):
             with open(out_dir / TYPES_FILE, "a") as f:
                 f.write(code)
 
+        def create_unmarshalling_header():
+            code = f"{model.name} unmarshall_{model.name}(char* message, int& i);\n\n"
+            with open(out_dir / UNMARSHALLING_HEADER_FILE, "a") as f:
+                f.write(code)
+
+
         def create_unmarshalling():
             code = f"{model.name} unmarshall_{model.name}(char* message, int& i) {{\n"
             code += f"\t{model.name} {model.name}__struct;\n"
@@ -105,7 +113,12 @@ class CPPCompiler(BaseCompiler):
 
             code += f"\treturn {model.name}__struct;\n"
             code += "}\n\n"
-            with open(out_dir / UNMARSHALLING_FILE, "a") as f:
+            with open(out_dir / UNMARSHALLING_CPP_FILE, "a") as f:
+                f.write(code)
+
+        def create_marshalling_header():
+            code = f"void marshall_{model.name}(char* message, int& i, {model.name} val);\n\n"
+            with open(out_dir / MARSHALLING_HEADER_FILE, "a") as f:
                 f.write(code)
 
         def create_marshalling():
@@ -123,12 +136,14 @@ class CPPCompiler(BaseCompiler):
                         code += f"\tmarshall_len_header(message, i, val.{attr.name}.length());\n"
                     code += f"\tmarshall_{attr.type}(message, i, val.{attr.name});\n"
             code += "}\n\n"
-            with open(out_dir / MARSHALLING_FILE, "a") as f:
+            with open(out_dir / MARSHALLING_CPP_FILE, "a") as f:
                 f.write(code)
 
         create_type()
-        create_marshalling()
+        create_unmarshalling_header()
         create_unmarshalling()
+        create_marshalling_header()
+        create_marshalling()
 
     @classmethod
     def _handle_enum(
@@ -161,9 +176,15 @@ class CPPCompiler(BaseCompiler):
             with open(out_dir / TYPES_FILE, "a") as f:
                 f.write(code)
 
+        def create_unmarshalling_header():
+            code = f"{model.name} unmarshall_{model.name}(char* message, int& i);\n\n"
+            with open(out_dir / UNMARSHALLING_HEADER_FILE, "a") as f:
+                f.write(code)
+
+
         def create_unmarshalling():
             code = f"{model.name} unmarshall_{model.name}(char* message, int& i) {{\n"
-            code += f"\tchar enum_id = message[i];\n"
+            code += f"\tchar enum_id = unmarshall_int(message, i);\n"
             code += f"\tswitch (enum_id) {{\n"
 
             for i, key in enumerate(model.keys, start=1):
@@ -173,18 +194,25 @@ class CPPCompiler(BaseCompiler):
             code += '\t\t\tthrow std::runtime_error("Unrecognized enum_id" + std::to_string(enum_id));\n'
             code += f"\t}}\n"
             code += "}\n\n"
-            with open(out_dir / UNMARSHALLING_FILE, "a") as f:
+            with open(out_dir / UNMARSHALLING_CPP_FILE, "a") as f:
+                f.write(code)
+
+        def create_marshalling_header():
+            code = f"void marshall_{model.name}(char* message, int& i, {model.name} val);\n\n"
+            with open(out_dir / MARSHALLING_HEADER_FILE, "a") as f:
                 f.write(code)
 
         def create_marshalling():
             code = f"void marshall_{model.name}(char* message, int& i, {model.name} val) {{\n"
             code += "\tmarshall_int(message, i, (int)val);\n"
             code += "}\n\n"
-            with open(out_dir / MARSHALLING_FILE, "a") as f:
+            with open(out_dir / MARSHALLING_CPP_FILE, "a") as f:
                 f.write(code)
 
         create_type()
+        create_unmarshalling_header()
         create_unmarshalling()
+        create_marshalling_header()
         create_marshalling()
 
     @classmethod
@@ -256,7 +284,7 @@ class CPPCompiler(BaseCompiler):
                     else:
                         code += f"\tmarshall_{arg.type}(request_data, i, {arg.name});\n"
                 
-                code += "\tint response_len = proto.send(server_addr, request_data, i, response_data);\n"
+                code += "\tint response_len = proto.send(server_addr, request_data, i, response_data, buffer_size);\n"
                 code += "\ti = 0;\n"
                 code += "\tunmarshall_int(response_data, i);  // strip method_id\n"  
                 if is_sequence(method.ret_type):
@@ -305,9 +333,9 @@ class CPPCompiler(BaseCompiler):
 
                 if is_sequence(method.ret_type):
                     nested_type = get_nested_type(method.ret_type)
-                    code += f"\t\t\tmarshall_len_header(response_data, i, {method.name}__result.size());\n"
+                    code += f"\t\t\tmarshall_len_header(response_data, j, {method.name}__result.size());\n"
                     code += f"\t\t\tfor ({nested_type} result__seq__item : {method.name}__result)\n"
-                    code += f"\t\t\t\tmarshall_{nested_type}(response_data, i, result__seq__item);\n"
+                    code += f"\t\t\t\tmarshall_{nested_type}(response_data, j, result__seq__item);\n"
                 else:
                     code += f"\t\t\tmarshall_{method.ret_type}(response_data, j, {method.name}__result);\n"
                 code += "\t\t\treturn j;\n"

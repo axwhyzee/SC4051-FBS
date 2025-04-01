@@ -24,13 +24,15 @@ public:
      * @param request_data Byte array of request data
      * @param request_len Length of request data in bytes
      * @param response_data Byte array to write response into
+     * @param request_len Length of response data in bytes
      * @return Length of response data
      */
     virtual int send(
         sockaddr_in server_addr, 
         char* request_data, 
         int request_len, 
-        char* response_data
+        char* response_data,
+        int response_len
     ) = 0;
 
     virtual int get_buffer_size() = 0;
@@ -47,7 +49,8 @@ public:
         sockaddr_in server_addr, 
         char* request_data, 
         int request_len, 
-        char* response_data
+        char* response_data,
+        int response_len
     );
     int get_buffer_size();
 

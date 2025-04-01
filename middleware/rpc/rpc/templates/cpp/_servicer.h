@@ -1,4 +1,4 @@
-class {__SERVICE_NAME__}Servicer : Servicer {
+class {__SERVICE_NAME__}Servicer : public Servicer {
 
 /**
  * Servicer listens to a specified port for RPC requests.
@@ -7,7 +7,7 @@ class {__SERVICE_NAME__}Servicer : Servicer {
  */
 
 public:
-    {__SERVICE_NAME__}Servicer(int port, {__SERVICE_NAME__}& service) : service(service) {};
+    {__SERVICE_NAME__}Servicer({__SERVICE_NAME__}& service) : service(service) {};
 
     /**
      * Unmarshall raw RPC bytestream and call the corresponding 

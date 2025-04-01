@@ -65,7 +65,7 @@ void RUDP::listen(int port, Servicer& servicer) {
             sendto(
                 sockfd,
                 response_data,
-                sizeof(char) * 5,
+                response_len,
                 0,
                 (struct sockaddr*)&client_addr,
                 sizeof(client_addr)
@@ -83,7 +83,8 @@ int RUDP::send(
     sockaddr_in server_addr, 
     char* request_data, 
     int request_len, 
-    char* response_data
+    char* response_data,
+    int response_len
 ) {
     // create socket
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -104,19 +105,19 @@ int RUDP::send(
     struct sockaddr_in response_addr;
     socklen_t addr_len = sizeof(response_addr);
 
-    int response_len = recvfrom(
+    int recv_response_len = recvfrom(
         sockfd, 
         response_data, 
-        sizeof(response_data), 
+        response_len,
         0,
         (struct sockaddr*)&response_addr, 
         &addr_len
     );
 
-    if (response_len < 0) {
+    if (recv_response_len < 0) {
         throw std::runtime_error("Failed to receive response");
     }
-    return response_len;
+    return recv_response_len;
 }
 
 

@@ -1,5 +1,6 @@
 int {__SERVICE_NAME__}Servicer::callback(char* request_data, int request_len, char* response_data) {
-    int i, j = 0;
+    int i, j;
+    i = j = 0;
     char arg_id;
     int method_id = unmarshall_int(request_data, i);
     
