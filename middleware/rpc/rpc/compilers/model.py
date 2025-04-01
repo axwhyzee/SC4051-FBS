@@ -25,6 +25,7 @@ class StructModel(BlockModel):
 
 @dataclass
 class Method:
+    id: int
     name: str
     ret_type: str
     args: List[Attribute]

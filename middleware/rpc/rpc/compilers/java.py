@@ -34,8 +34,6 @@ _translate_attr_type = partial(translate_attr_type, dtypes=JAVA_DTYPES)
 
 class JavaCompiler(BaseCompiler):
 
-    method_counter = 1
-
     @classmethod
     def _handle_struct(
         cls, model: StructModel, out_dir: Path, root_dir: Path
@@ -184,13 +182,14 @@ class JavaCompiler(BaseCompiler):
             (out_dir / f"{model.name}.java").write_text(code)
 
         def create_servicer():
+            """Unmarshall RPC request, execute request, marshall and send response"""
             code = "\n"
-            for i, method in enumerate(model.methods, start=1):
-                code += f"\t\t\tcase {i}:\n"
+            for method in model.methods:
+                code += f"\t\t\tcase {method.id}:\n"
                 arg_names = []
 
                 for arg in method.args:
-                    arg_name = f"{arg.name}__{i}__arg"
+                    arg_name = f"{arg.name}__{method.id}__arg"
                     arg_names.append(arg_name)
                     translated_type = _translate_attr_type(arg.type)
 
@@ -204,7 +203,8 @@ class JavaCompiler(BaseCompiler):
                         code += f"\t\t\t\t{translated_type} {arg_name} = Unmarshaller.unmarshall_{arg.type}(message, i);\n"
 
                 code += f'\t\t\t\t{_translate_attr_type(method.ret_type)} {method.name}__result = service.{method.name}({", ".join(arg_names)});\n'
-                
+                code += "\t\t\t\ti[0] = 0;\n"
+                code += f"\t\t\t\tMarshaller.marshall_int(response, i, {method.id})\n"
                 if is_sequence(method.ret_type):
                     nested_type = get_nested_type(method.ret_type)
                     translated_type = _translate_attr_type(method.ret_type)
@@ -240,9 +240,7 @@ class JavaCompiler(BaseCompiler):
                 code += ") {\n"
                 code += "\t\tint[] i = {0};\n"
                 code += "\t\tbyte[] request_data = new byte[proto.get_buffer_size()];\n"
-                code += f"\t\tMarshaller.marshall_int(request_data, i, {cls.method_counter});\n"
-                cls.method_counter += 1
-
+                code += f"\t\tMarshaller.marshall_int(request_data, i, {method.id});\n"
                 for arg in method.args:
                     if is_sequence(arg.type):
                         nested_type = get_nested_type(arg.type)
