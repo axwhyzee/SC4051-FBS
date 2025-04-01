@@ -150,7 +150,7 @@ class JavaCompiler(BaseCompiler):
                 code += f"\t\t\tcase {i}:\n"
                 code += f"\t\t\t\treturn {model.name}.{key};\n"
             code += "\t\t\tdefault:\n"
-            code += f'\t\t\t\tthrow new EnumConstantNotPresentException({model.name}.class, "Invalid ordinal value: " + enum_id);'
+            code += f'\t\t\t\tthrow new EnumConstantNotPresentException({model.name}.class, "Invalid ordinal value: " + enum_id);\n'
             code += "\t\t}\n"
             code += "\t}\n\n"
 
@@ -204,14 +204,13 @@ class JavaCompiler(BaseCompiler):
 
                 code += f'\t\t\t\t{_translate_attr_type(method.ret_type)} {method.name}__result = service.{method.name}({", ".join(arg_names)});\n'
                 code += "\t\t\t\ti[0] = 0;\n"
-                code += f"\t\t\t\tMarshaller.marshall_int(response, i, {method.id})\n"
+                code += f"\t\t\t\tMarshaller.marshall_int(response, i, {method.id});\n"
                 if is_sequence(method.ret_type):
                     nested_type = get_nested_type(method.ret_type)
                     translated_type = _translate_attr_type(method.ret_type)
-                    code += f"\t\t\t\tint result__seq__len = {method.name}__result.length;\n"
-                    code += f"\t\t\t\t{translated_type} result__seq = new {nested_type}[result__seq__len];\n"
-                    code += f"\t\t\t\tfor ({nested_type} result__seq__item : result__seq)\n"
-                    code += f"\t\t\t\t\tMarshaller.marshall_{nested_type}(response, i, result__seq__item);\n"
+                    code += f"\t\t\t\tMarshaller.marshall_len_header(response, i, {method.name}__result.length);\n"
+                    code += f"\t\t\t\tfor ({nested_type} {method.name}__result__item : {method.name}__result)\n"
+                    code += f"\t\t\t\t\tMarshaller.marshall_{nested_type}(response, i, {method.name}__result__item);\n"
                 else:
                     code += f"\t\t\t\tMarshaller.marshall_{method.ret_type}(response, i, {method.name}__result);\n"
                 code += "\t\t\t\treturn i[0];\n"
@@ -254,6 +253,7 @@ class JavaCompiler(BaseCompiler):
                 if is_sequence(method.ret_type):
                     nested_type = get_nested_type(method.ret_type)
                     translated_type = _translate_attr_type(method.ret_type)
+                    code += f"\t\tUnmarshaller.unmarshall_int(response_data, i);  // strip method_id\n"
                     code += f"\t\tint response__seq__len = Unmarshaller.unmarshall_int(response_data, i);\n"
                     code += f"\t\t{translated_type} response__seq = new {nested_type}[response__seq__len];\n"
                     code += f"\t\tfor (int j=0; j<response__seq__len; j++)\n"
@@ -276,8 +276,8 @@ class JavaCompiler(BaseCompiler):
     @classmethod
     def compile(cls, in_file: Path, out_dir: Path, root_dir: Path) -> None:
         # copy templates
-        for file in TEMPLATES_DIR.iterdir():
-            if file.suffix == ".java" and not file.stem.startswith("_"):
+        for file in TEMPLATES_DIR.rglob("*.java"):
+            if not file.stem.startswith("_"):
                 (out_dir / file.name).write_text(file.read_text())
         super().compile(in_file, out_dir, root_dir)
 
@@ -289,8 +289,7 @@ class JavaCompiler(BaseCompiler):
         # set package
         package = str(out_dir.relative_to(root_dir)).replace("/", ".")
         if out_dir != root_dir:
-            for file in out_dir.iterdir():
-                file.write_text(
-                    f"package {package};\n\n"
-                    + file.read_text()
-                )
+            for file in out_dir.rglob("*.java"):
+                text = file.read_text()
+                file.write_text(f"package {package};\n\n{text}")
+                
