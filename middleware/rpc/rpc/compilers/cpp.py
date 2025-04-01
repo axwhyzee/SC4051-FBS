@@ -169,6 +169,8 @@ class CPPCompiler(BaseCompiler):
             for i, key in enumerate(model.keys, start=1):
                 code += f"\t\tcase {i}:\n"
                 code += f"\t\t\treturn ({model.name}) {key};\n"
+            code += "\t\tdefault:\n"
+            code += '\t\t\tthrow std::runtime_error("Unrecognized enum_id" + std::to_string(enum_id));\n'
             code += f"\t}}\n"
             code += "}\n\n"
             with open(out_dir / UNMARSHALLING_FILE, "a") as f:

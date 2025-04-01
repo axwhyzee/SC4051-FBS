@@ -116,6 +116,7 @@ int RUDP::send(
     if (response_len < 0) {
         throw std::runtime_error("Failed to receive response");
     }
+    return response_len;
 }
 
 
