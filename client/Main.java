@@ -124,7 +124,7 @@ public class Main {
 
                     System.out.println(facilityName + " " + startTime+ " " + endTime);
                     
-                    service.bookFacility(facilityName, startTime, endTime);
+                    service.bookFacility(facilityName,userName, startTime, endTime);
 
                     System.out.print("\nPress Enter to continue...");
                     input = scanner.nextLine();

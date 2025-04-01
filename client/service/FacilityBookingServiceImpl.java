@@ -85,7 +85,7 @@ public class FacilityBookingServiceImpl implements FacilityBookingService {
     }
 
     @Override
-    public BookResponse bookFacility(String user, DayTime start, DayTime end) {
+    public BookResponse bookFacility(String facilityName, String user, DayTime start, DayTime end) {
         System.out.println("book facility");
         int bookingId = 100; 
         BookResponse resp; 
@@ -101,7 +101,7 @@ public class FacilityBookingServiceImpl implements FacilityBookingService {
 
     @Override
     public Response changeBooking(int bookingId, int offset) {
-        
+        System.out.println("change booking");
         Response resp;
 
         // successful
@@ -126,6 +126,7 @@ public class FacilityBookingServiceImpl implements FacilityBookingService {
 
     @Override
     public Response extendBooking(int bookingId, int minutes) {
+        System.out.println("extend booking");
         Response resp;
 
         // successful

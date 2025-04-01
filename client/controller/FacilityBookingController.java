@@ -57,16 +57,20 @@ public class FacilityBookingController {
     }
 
     public void viewFacilities() {
+
+        System.out.println("viewwww");
         
         FacilitiesResponse resp = null;
         
+        System.out.println("viewwww2");
         try {
             resp = stub.viewFacilities();
+            
+            System.out.println("viewww3");
             boundary.displayFacilityDetails(resp.facilities());
         } catch (Exception e) {
             System.out.println("An error occurred during the request: " + e.getMessage());
         }
-
     }
 
     
@@ -86,12 +90,12 @@ public class FacilityBookingController {
     }
 
     
-    public void bookFacility(String user, String start, String end) {
+    public void bookFacility(String facilityName, String user, String start, String end) {
         
         BookResponse resp = null;
         
         try {
-            resp = stub.bookFacility(user,convertToDayTime(start),convertToDayTime(end));
+            resp = stub.bookFacility(facilityName,user,convertToDayTime(start),convertToDayTime(end));
             if (resp.bookingId() > 0) {
                 System.out.println("Booking successfully made! Your booking confirmation ID: " + resp.bookingId());
             } else {
@@ -118,13 +122,11 @@ public class FacilityBookingController {
     public void extendBooking(int bookingId, int minutes) {
         Response resp = null;
         
-        // try {
-        //     resp = stub.extendBooking(bookingId,minutes);
-        // } catch (UnknownHostException e) {
-        //     System.out.println("Localhost could not be resolved");
-        // } catch (Exception e) {
-        //     System.out.println("An error occurred during the request: " + e.getMessage());
-        // }
+        try {
+            resp = stub.extendBooking(bookingId,minutes);
+        } catch (Exception e) {
+            System.out.println("An error occurred during the request: " + e.getMessage());
+        }
  
     }
 
