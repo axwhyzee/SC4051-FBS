@@ -33,13 +33,15 @@ public:
         char* response_data
     ) = 0;
 
+    virtual int get_buffer_size() = 0;
+
     virtual ~Protocol() {}
 };
 
 
 class RUDP : public Protocol {
 public:
-    static constexpr int BUFFER_SIZE = 2048;
+    ~RUDP() {};
     void listen(int port, Servicer& servicer);
     int send(
         sockaddr_in server_addr, 
@@ -47,6 +49,8 @@ public:
         int request_len, 
         char* response_data
     );
-    ~RUDP() {};
+    int get_buffer_size();
 
+private:
+    static constexpr int BUFFER_SIZE = 2048;
 };

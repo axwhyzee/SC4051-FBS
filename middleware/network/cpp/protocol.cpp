@@ -117,3 +117,8 @@ int RUDP::send(
         throw std::runtime_error("Failed to receive response");
     }
 }
+
+
+int RUDP::get_buffer_size() {
+    return BUFFER_SIZE;
+}
