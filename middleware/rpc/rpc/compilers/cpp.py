@@ -279,6 +279,7 @@ class CPPCompiler(BaseCompiler):
                 for arg in method.args:
                     if is_sequence(arg.type):
                         nested_type = get_nested_type(arg.type)
+                        code += f"\tmarshall_int(request_data, i, {arg.name}.size());\n"
                         code += f"\tfor ({nested_type} {arg.name}__item : {arg.name})\n"
                         code += f"\t\tmarshall_{nested_type}(request_data, i, {arg.name}__item);\n"
                     else:
