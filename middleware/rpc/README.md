@@ -125,7 +125,7 @@ int main() {
 Start server
 ```
 // from the server/ directory, run ...
-g++ server.cpp middleware/network/*.cpp middleware/protos/*.cpp -o server
+g++ -std=c++11 server.cpp middleware/network/*.cpp middleware/protos/*.cpp -o server
 ```
 
 ## Implement Client
@@ -184,7 +184,7 @@ int main() {
 Start client
 ```
 // from the server/ directory, run ...
-g++ client.cpp middleware/network/*.cpp middleware/protos/*.cpp -o client
+g++ -std=c++11 client.cpp middleware/network/*.cpp middleware/protos/*.cpp -o client
 ```
 
 # Java Demo
