@@ -24,7 +24,6 @@ pip install .  # installs rpc package
 
 ```
 mkdir ../../client
-mkdir ../../client/protos
 source env/bin/activate
 rpc_tools --infile=proto.idl --outdir=../../server --lang=cpp
 ```
@@ -94,5 +93,3 @@ public class TestServer {
     }
 }
 ```
-
-rpc_tools --infile=proto.idl --outdir=./client --lang=cpp
