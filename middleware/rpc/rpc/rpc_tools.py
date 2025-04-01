@@ -45,14 +45,18 @@ def main():
         Path(args.infile), protos_dir, root_dir
     )
 
+    network_template_dir = Path("../network") / lang
+
     if lang == Language.JAVA:
         package = str(network_dir.relative_to(root_dir)).replace("/", ".")
         # copy network template files to out_dir
-        for file in (Path("../network") / lang).iterdir():
-            print(f"Copying {file} to {network_dir / file.name}")
+        for file in network_template_dir.iterdir():
             with open(network_dir / file.name, "w") as f:
                 text = file.read_text()
                 # set package path relative to root dir
                 if package:
                     text = f"package {package};\n\n" + text
                 f.write(text)
+    elif lang == Language.CPP:
+        for file in network_template_dir.iterdir():
+            (network_dir / file.name).write_text(file.read_text())  # copy

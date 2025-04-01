@@ -48,6 +48,9 @@ class StructParser(AbstractParser):
 
 
 class InterfaceParser(AbstractParser):
+    
+    method_counter = 1
+
     @classmethod
     def parse(cls, name: str, lines: List[str]) -> BlockModel:
         methods = []
@@ -57,15 +60,17 @@ class InterfaceParser(AbstractParser):
             ret_type, f_name, args = match.groups()
             methods.append(
                 Method(
+                    id=cls.method_counter,
                     name=f_name,
                     ret_type=ret_type,
                     args=(
                         [_parse_attr(arg) for arg in _split_strip(args, ",")]
                         if args
                         else []
-                    ),
+                    )
                 )
             )
+            cls.method_counter += 1
         return InterfaceModel(name=name, methods=methods)
 
 

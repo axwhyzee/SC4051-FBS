@@ -24,14 +24,18 @@ public:
      * @param request_data Byte array of request data
      * @param request_len Length of request data in bytes
      * @param response_data Byte array to write response into
+     * @param request_len Length of response data in bytes
      * @return Length of response data
      */
     virtual int send(
         sockaddr_in server_addr, 
         char* request_data, 
         int request_len, 
-        char* response_data
+        char* response_data,
+        int response_len
     ) = 0;
+
+    virtual int get_buffer_size() = 0;
 
     virtual ~Protocol() {}
 };
@@ -39,14 +43,17 @@ public:
 
 class RUDP : public Protocol {
 public:
-    static constexpr int BUFFER_SIZE = 2048;
+    ~RUDP() {};
     void listen(int port, Servicer& servicer);
     int send(
         sockaddr_in server_addr, 
         char* request_data, 
         int request_len, 
-        char* response_data
+        char* response_data,
+        int response_len
     );
-    ~RUDP() {};
+    int get_buffer_size();
 
+private:
+    static const int BUFFER_SIZE = 2048;
 };

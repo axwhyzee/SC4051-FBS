@@ -7,7 +7,8 @@
 #include "stubs.h"
 #include "proto_types.h"
 #include "unmarshalling.h"
+#include "../network/servicer.h"
+#include "../network/protocol.h"
 #include "marshalling.h"
 
-#define BUFFER_SIZE 2048
 
