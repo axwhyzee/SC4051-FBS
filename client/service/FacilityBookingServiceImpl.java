@@ -7,17 +7,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import middleware.network.RUDP;
 
-import middleware.protos.FacilityBookingService;
-import middleware.protos.AvailabilityResponse;
-import middleware.protos.BookResponse;
-import middleware.protos.Response;
-import middleware.protos.FacilitiesResponse;
-
-import middleware.protos.Day; 
-import middleware.protos.DayTime;
-import middleware.protos.Interval;
-import middleware.protos.Facility;
-import middleware.protos.Booking;
+import middleware.protos.*;
 
 import boundary.FacilityBookingBoundary;
 
