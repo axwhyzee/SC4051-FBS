@@ -80,7 +80,7 @@ Copy the demo server code below into `server/server.cpp`
 ```
 #include <vector>
 #include <iostream>
-#include "middleware/network/protocol.h"
+#include "middleware/network/RUDP.h"
 #include "middleware/protos/stubs.h"
 #include "middleware/protos/proto_types.h"
 
@@ -98,7 +98,8 @@ Copy the demo server code below into `server/server.cpp`
  */
 class ConcreteTestService : public TestService {
 public:
-    std::vector<DayTime> generate_noon_daytimes(std::vector<Day> days) {
+    std::vector<DayTime> generate_noon_daytimes(std::vector<Day> days, sockaddr_in client_addr) {
+        std::cout << "receonwew" << std::endl;
         std::vector<DayTime> result;
         for (Day day : days) {
             DayTime daytime;
@@ -116,9 +117,8 @@ int main() {
     int server_port = 5432;
     ConcreteTestService service = ConcreteTestService();
     TestServiceServicer servicer = TestServiceServicer(service);
-    RUDP rudp = RUDP();
-
-    rudp.listen(server_port, servicer);
+    RUDP rudp = RUDP(server_port);
+    rudp.listen(servicer);
 }
 ```
 
@@ -137,7 +137,7 @@ Copy the demo client code below into `server/client.cpp`
 #include <cstring>      
 #include <netinet/in.h> 
 #include <arpa/inet.h>
-#include "middleware/network/protocol.h"
+#include "middleware/network/RUDP.h"
 #include "middleware/protos/stubs.h"
 
 
