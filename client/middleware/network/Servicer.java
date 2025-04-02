@@ -1,4 +1,4 @@
-package middleware\network;
+package middleware.network;
 
 /**
  * Servicer defines a callback interface for RPC services.

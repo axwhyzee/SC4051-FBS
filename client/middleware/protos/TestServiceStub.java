@@ -1,4 +1,4 @@
-package middleware\protos;
+package middleware.protos;
 
 import java.net.InetAddress;
 import middleware.network.Protocol;

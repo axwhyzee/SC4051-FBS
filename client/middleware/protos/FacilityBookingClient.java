@@ -1,4 +1,4 @@
-package middleware\protos;
+package middleware.protos;
 
 public interface FacilityBookingClient {
 	Response terminate();

@@ -1,4 +1,4 @@
-package middleware\network;
+package middleware.network;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -51,6 +51,8 @@ public class RUDP implements Protocol {
             System.out.println("IO exception when receiving via RUDP");
         } finally {
             if (socket != null && !socket.isClosed()) {
+                
+                System.out.println("Closing Socket");
                 socket.close();
             }
         }

@@ -1,4 +1,4 @@
-package middleware\network;
+package middleware.network;
 
 import java.net.InetAddress;
 

@@ -1,4 +1,4 @@
-package middleware\network;
+package middleware.network;
 
 /**
  * Simple dataclass to store byte array and length in a single object

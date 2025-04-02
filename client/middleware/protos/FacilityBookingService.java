@@ -1,4 +1,4 @@
-package middleware\protos;
+package middleware.protos;
 
 public interface FacilityBookingService {
 	AvailabilityResponse queryFacility(String facilityName, Day[] days);
