@@ -8,7 +8,7 @@
 #include "proto_types.h"
 #include "unmarshalling.h"
 #include "../network/servicer.h"
-#include "../network/protocol.h"
+#include "../network/RUDP.h"
 #include "marshalling.h"
 
 

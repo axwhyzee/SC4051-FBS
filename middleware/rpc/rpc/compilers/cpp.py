@@ -246,7 +246,7 @@ class CPPCompiler(BaseCompiler):
 
             code = f"class {model.name}Stub {{\n"
             code += "public:\n"
-            code += f"\t{model.name}Stub(sockaddr_in server_addr, Protocol& proto) : server_addr(server_addr), proto(proto) {{}};\n"
+            code += f"\t{model.name}Stub(sockaddr_in server_addr, RUDP& proto) : server_addr(server_addr), proto(proto) {{}};\n"
             code += f"\t~{model.name}Stub() {{}};\n"
 
             for method in model.methods:
@@ -258,7 +258,7 @@ class CPPCompiler(BaseCompiler):
             
             code += "private:\n"
             code += "\tsockaddr_in server_addr;\n"
-            code += "\tProtocol& proto;\n"
+            code += "\tRUDP& proto;\n"
             code += "};\n\n"
             return code
         
