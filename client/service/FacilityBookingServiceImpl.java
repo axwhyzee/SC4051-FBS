@@ -11,8 +11,6 @@ import middleware.protos.*;
 
 import boundary.FacilityBookingBoundary;
 
-import middleware.protos.FacilityBookingServiceStub;
-
 import java.util.List;
 
 public class FacilityBookingServiceImpl implements FacilityBookingService {
