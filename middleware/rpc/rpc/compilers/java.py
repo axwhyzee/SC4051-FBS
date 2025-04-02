@@ -236,7 +236,7 @@ class JavaCompiler(BaseCompiler):
                 code += ", ".join(
                     [_translate_attr(attr) for attr in method.args]
                 )
-                code += ") {\n"
+                code += ") throws Exception {\n"
                 code += "\t\tint[] i = {0};\n"
                 code += "\t\tbyte[] request_data = new byte[proto.get_buffer_size()];\n"
                 code += f"\t\tMarshaller.marshall_int(request_data, i, {method.id});\n"

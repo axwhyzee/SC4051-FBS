@@ -4,9 +4,8 @@ public class Unmarshaller {
         int res = 0;
         for (int j=0; j<4; j++) {
             res <<= 8;
-            res |= message[i[0]+j];
+            res |= message[i[0]++];
         }
-        i[0] += 4;
         return res;
     }
 
