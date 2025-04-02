@@ -1,0 +1,71 @@
+enum Day {
+    MONDAY;
+    TUESDAY;
+    WEDNESDAY;
+    THURSDAY;
+    FRIDAY;
+    SATURDAY;
+    SUNDAY;
+};
+
+struct DayTime {
+    Day day;
+    int hour;
+    int minute;
+};
+
+struct Interval {
+    DayTime start;
+    DayTime end;
+}
+
+struct Booking {
+    string user;
+    DayTime start;
+    DayTime end;
+}
+
+struct Facility {
+    string name;           
+    string type;           
+    sequence<Booking> bookings; 
+};
+
+struct Response {
+    string error;
+}
+
+struct AvailabilityResponse {
+    string error;
+    sequence<Interval> availability;
+}
+
+struct BookResponse {
+    string error;
+    int bookingId;
+}
+
+struct FacilitiesResponse {
+    string error;
+    sequence<Facility> facilities;
+}
+
+interface FacilityBookingService {
+    AvailabilityResponse queryFacility(string facilityName, sequence<Day> days);
+
+    BookResponse bookFacility(string facilityName, string user, DayTime start, DayTime end);
+
+    Response changeBooking(int bookingId, int offset);
+
+    Response subscribe(string facilityName, int minutes);
+
+    Response extendBooking(int bookingId, int minutes);
+
+    FacilitiesResponse viewFacilities();
+};
+
+interface FacilityBookingClient {
+    Response terminate();
+    
+    Response publish(sequence<Interval> availability);
+}
