@@ -68,6 +68,27 @@ public class FacilityBookingBoundary {
         }
     }
 
+    public void displayMonitoredFacility(Interval[] availability) {
+        // Print header
+        System.out.println("Showing Availability Update"); 
+        System.out.println(String.format("%9s %-10s %9s %-10s", "Start", "Time", "End", "Time"));
+        System.out.println("-------------------- --------------------");
+
+        // Loop through each interval
+        for (Interval interval : availability) {
+            // Extract start and end times
+            DayTime start = interval.start();
+            DayTime end = interval.end();
+            
+            String startTime = String.format("%9s %02d:%02d", start.day(), start.hour(), start.minute());
+            String endTime = String.format("%9s %02d:%02d", end.day(), end.hour(), end.minute());
+
+            // Print formatted interval
+            System.out.println(String.format("%-20s %-20s", startTime, endTime));
+            
+        }
+    }
+
     
 
 

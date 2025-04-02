@@ -3,6 +3,7 @@ package controller;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import middleware.network.RUDP;
@@ -10,6 +11,7 @@ import middleware.network.RUDP;
 import middleware.protos.*;
 
 import boundary.FacilityBookingBoundary;
+import service.FacilityBookingClientImpl;
 
 
 import java.util.List;
@@ -23,8 +25,8 @@ public class FacilityBookingController {
     private RUDP rudp;
     private InetAddress localhost;  
     private int port; 
-    // FacilityBookingClient service;
-    // FacilityBookingClientServicer servicer;
+    FacilityBookingClient service;
+    FacilityBookingClientServicer servicer;
 
 
     // Constructor
@@ -118,17 +120,25 @@ public class FacilityBookingController {
         try {
             AvailabilityResponse availResp = stub.queryFacility(facilityName,days);
             boundary.displayAvailability(facilityName,availResp.availability(),daysList); 
+            // stub.subscribe(facilityName,minutes);
         } catch (Exception e) {
             System.out.println("An error occurred during the request: " + e.getMessage());
         }
 
-        // try {
-        //     this.service = new FacilityBookingClientImpl();
-        //     this.servicer = new FacilityBookingClientServicer(service);
-        //     rudp.listen(this.port, this.servicer);
-        // } catch (Exception e) {
-        //     System.out.println("Subscription has expired");
-        // }       
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("\nPress Enter to continue...");
+        String input = scanner.nextLine();
+
+        try {
+            this.service = new FacilityBookingClientImpl();
+            this.servicer = new FacilityBookingClientServicer(service);
+
+            rudp.listen(this.port, this.servicer);
+            throw new Exception("Test exception: Subscription failure");
+            
+        } catch (Exception e) {
+            System.out.println("Subscription has expired."); ;
+        }      
     }
 
     public static Day[] convertListToDayArray(List<Integer> daysList) {
