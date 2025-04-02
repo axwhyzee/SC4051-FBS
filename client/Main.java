@@ -155,7 +155,8 @@ public class Main {
                             System.out.println("Invalid input! Please enter a valid integer value for the offset in minutes.");
                         }
                     }
-                    System.out.println(bookingID + " " + number);
+
+                    service.changeBooking(bookingID,number);
 
                     System.out.print("\nPress Enter to continue...");
                     input = scanner.nextLine();

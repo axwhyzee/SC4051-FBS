@@ -79,10 +79,10 @@ public class FacilityBookingServiceImpl implements FacilityBookingService {
         BookResponse resp; 
 
         // successful
-        resp = new BookResponse("", bookingId);
+        // resp = new BookResponse("", bookingId);
 
         // Fail
-        // resp = new BookResponse("Booking Failed", -1);
+        resp = new BookResponse("Booking Failed", -1);
 
         return resp ;
     }
@@ -93,7 +93,7 @@ public class FacilityBookingServiceImpl implements FacilityBookingService {
         Response resp;
 
         // successful
-        resp = new Response("");
+        resp = new Response("Booking changed successfully.");
         // Failed
         // resp =  new Response("Failed to change Booking");
 

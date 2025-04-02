@@ -47,9 +47,7 @@ public class FacilityBookingController {
     public void viewFacilities() {
 
         try {
-            System.out.println("resp1");
             FacilitiesResponse resp = stub.viewFacilities();
-            System.out.println("resp2");
             boundary.displayFacilityDetails(resp.facilities());
         } catch (Throwable t) { // Catches EVERYTHING (Exceptions + Errors)
             System.out.println("A critical error occurred: " + t.getMessage());
@@ -92,6 +90,7 @@ public class FacilityBookingController {
         
         try {
             Response resp = stub.changeBooking(bookingId,offset);
+            System.out.println(resp.error());
         } catch (Exception e) {
             System.out.println("An error occurred during the request: " + e.getMessage());
         }
