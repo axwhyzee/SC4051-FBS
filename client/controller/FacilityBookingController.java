@@ -47,8 +47,9 @@ public class FacilityBookingController {
         try {
             FacilitiesResponse resp = stub.viewFacilities();
             boundary.displayFacilityDetails(resp.facilities());
-        } catch (Exception e) {
-            System.out.println("An error occurred during the request: " + e.getMessage());
+        } catch (Throwable t) { // Catches EVERYTHING (Exceptions + Errors)
+            System.out.println("A critical error occurred: " + t.getMessage());
+            t.printStackTrace();
         }
     }
 
