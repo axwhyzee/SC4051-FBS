@@ -7,21 +7,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import middleware.network.RUDP;
 
-import middleware.protos.FacilityBookingService;
-import middleware.protos.AvailabilityResponse;
-import middleware.protos.BookResponse;
-import middleware.protos.Response;
-import middleware.protos.FacilitiesResponse;
-
-import middleware.protos.Day; 
-import middleware.protos.DayTime;
-import middleware.protos.Interval;
-import middleware.protos.Facility;
-import middleware.protos.Booking;
+import middleware.protos.*;
 
 import boundary.FacilityBookingBoundary;
 
-import middleware.protos.FacilityBookingServiceStub;
 
 import java.util.List;
 
@@ -31,25 +20,22 @@ public class FacilityBookingController {
     private String user; 
     private FacilityBookingBoundary boundary = new FacilityBookingBoundary();
     private FacilityBookingServiceStub stub; 
+    private RUDP rudp;
+    private InetAddress localhost;  
+    private int port; 
+    // FacilityBookingClient service;
+    // FacilityBookingClientServicer servicer;
 
-    private Interval[] subscribedAvailability ={
-        new Interval(new DayTime(Day.MONDAY, 8, 0), new DayTime(Day.MONDAY, 10, 0)),  // Before Alice's booking
-        new Interval(new DayTime(Day.MONDAY, 12, 0), new DayTime(Day.MONDAY, 20, 0)), // After Alice's booking
-        new Interval(new DayTime(Day.WEDNESDAY, 8, 0), new DayTime(Day.WEDNESDAY, 14, 30)), // Before Bob's booking
-        new Interval(new DayTime(Day.WEDNESDAY, 16, 0), new DayTime(Day.WEDNESDAY, 20, 0))  // After Bob's booking
-    };
-    private String subscribedFacility = "Hall 2"; 
 
     // Constructor
     public FacilityBookingController(String user) {
         this.user = user;
         try {
             // configure client
-            InetAddress localhost = InetAddress.getLocalHost();
-            RUDP rudp = new RUDP();
-            int port = 5432;
-            FacilityBookingServiceStub stub = new FacilityBookingServiceStub(localhost, port, rudp); 
-            this.stub = stub;  
+            this.localhost = InetAddress.getLocalHost();
+            this.rudp = new RUDP();
+            this.port = 5432;
+            this.stub = new FacilityBookingServiceStub(this.localhost, this.port, this.rudp);   
         } catch (UnknownHostException e) {
             System.out.println("Localhost could not be resolved");
         }
@@ -58,15 +44,8 @@ public class FacilityBookingController {
 
     public void viewFacilities() {
 
-        System.out.println("viewwww");
-        
-        FacilitiesResponse resp = null;
-        
-        System.out.println("viewwww2");
         try {
-            resp = stub.viewFacilities();
-            
-            System.out.println("viewww3");
+            FacilitiesResponse resp = stub.viewFacilities();
             boundary.displayFacilityDetails(resp.facilities());
         } catch (Exception e) {
             System.out.println("An error occurred during the request: " + e.getMessage());
@@ -76,12 +55,10 @@ public class FacilityBookingController {
     
     public void queryFacility(String facilityName, List<Integer> daysList) {
         
-        AvailabilityResponse resp = null;
-        
         try {
             // convert to Day structure
             Day[] days = convertListToDayArray(daysList);
-            resp = stub.queryFacility(facilityName,days);
+            AvailabilityResponse resp = stub.queryFacility(facilityName,days);
             boundary.displayAvailability(facilityName,resp.availability(),daysList);
         } catch (Exception e) {
             System.out.println("An error occurred during the request: " + e.getMessage());
@@ -91,11 +68,9 @@ public class FacilityBookingController {
 
     
     public void bookFacility(String facilityName, String user, String start, String end) {
-        
-        BookResponse resp = null;
-        
-        try {
-            resp = stub.bookFacility(facilityName,user,convertToDayTime(start),convertToDayTime(end));
+       
+       try {
+            BookResponse resp = stub.bookFacility(facilityName,user,convertToDayTime(start),convertToDayTime(end));
             if (resp.bookingId() > 0) {
                 System.out.println("Booking successfully made! Your booking confirmation ID: " + resp.bookingId());
             } else {
@@ -109,10 +84,9 @@ public class FacilityBookingController {
 
     
     public void changeBooking(int bookingId, int offset) {
-        Response resp = null;
         
         try {
-            resp = stub.changeBooking(bookingId,offset);
+            Response resp = stub.changeBooking(bookingId,offset);
         } catch (Exception e) {
             System.out.println("An error occurred during the request: " + e.getMessage());
         }
@@ -132,33 +106,27 @@ public class FacilityBookingController {
 
     
     public void subscribe(String facilityName, int minutes) {
+
+        List<Integer> daysList = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7));
+        Day[] days = convertListToDayArray(daysList);
+
         Response resp = null;
         
-        // try {
-        //     resp = stub.subscribe(facilityName,minutes);
-        // } catch (UnknownHostException e) {
-        //     System.out.println("Localhost could not be resolved");
-        // } catch (Exception e) {
-        //     System.out.println("An error occurred during the request: " + e.getMessage());
-        // }
-
-       
-    }
-
-    // merge with subscribe
-    public void viewSubscribedAvailability() {
-        
-        
-        if (subscribedFacility.isEmpty()){
-            System.out.println("You are not subscribed to any facility");
-        } else {
-            List<Integer> days = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7));
-            boundary.displayAvailability(subscribedFacility,subscribedAvailability,days); 
+        try {
+            AvailabilityResponse availResp = stub.queryFacility(facilityName,days);
+            boundary.displayAvailability(facilityName,availResp.availability(),daysList); 
+        } catch (Exception e) {
+            System.out.println("An error occurred during the request: " + e.getMessage());
         }
-    }
 
-    
-    
+        // try {
+        //     this.service = new FacilityBookingClientImpl();
+        //     this.servicer = new FacilityBookingClientServicer(service);
+        //     rudp.listen(this.port, this.servicer);
+        // } catch (Exception e) {
+        //     System.out.println("Subscription has expired");
+        // }       
+    }
 
     public static Day[] convertListToDayArray(List<Integer> daysList) {
         // Create a new Day[] array with the size of the List

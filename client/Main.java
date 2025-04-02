@@ -77,8 +77,7 @@ public class Main {
                             System.out.println("Invalid input! Please enter a valid number.");
                         }
                     }
-                    System.out.println(facilityName + " " + dayList);
-                    
+
                     service.queryFacility(facilityName, dayList);
 
                     System.out.print("\nPress Enter to continue...");
@@ -121,8 +120,6 @@ public class Main {
                             System.out.println("Invalid format! Enter a day (1-7) and time in 24-hour format (e.g., '2 14:30').");
                         }
                     }
-
-                    System.out.println(facilityName + " " + startTime+ " " + endTime);
                     
                     service.bookFacility(facilityName,userName, startTime, endTime);
 
@@ -160,8 +157,6 @@ public class Main {
                     }
                     System.out.println(bookingID + " " + number);
 
-                    service.changeBooking(bookingID,number);
-
                     System.out.print("\nPress Enter to continue...");
                     input = scanner.nextLine();
                     break; 
@@ -194,7 +189,6 @@ public class Main {
                             System.out.println("Invalid input! Please enter a valid integer value in minutes.");
                         }
                     }
-                    System.out.println(bookingID + " " + number);
                     
                     service.extendBooking(bookingID,number);
 
@@ -203,7 +197,7 @@ public class Main {
                     break; 
 
                 case "6": 
-                    System.out.println("[6] Subscribe to Monitor Facility");
+                    System.out.println("[6] Monitor Facility Availability");
 
                     while (true){ 
                     System.out.print("Enter facility name: ");
@@ -227,9 +221,7 @@ public class Main {
                             System.out.println("Invalid input! Please enter a valid integer value in minutes.");
                         }
                     }
-                    System.out.println(facilityName + " " + number);
 
-                    
                     service.subscribe(facilityName,number);
 
                     System.out.print("\nPress Enter to continue...");
@@ -237,13 +229,6 @@ public class Main {
                     break; 
 
                 case "7":
-                    System.out.println("[7] View Availability of Subscribed Facility");
-                    service.viewSubscribedAvailability();
-                    
-                    System.out.print("\nPress Enter to continue...");
-                    input = scanner.nextLine();
-                    break; 
-                case "8":
                     System.out.println("Exiting...");
                     return;
                 default:

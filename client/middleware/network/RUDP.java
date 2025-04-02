@@ -43,10 +43,8 @@ public class RUDP implements Protocol {
                         result_bytes
                     );
                 } catch (Exception e) {
-                    System.out.println("broken loop");
                     break;
                 }   
-                System.out.println("Loop");
             }
         } catch (IOException e) {
             // socket-related exceptions
