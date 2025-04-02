@@ -281,21 +281,21 @@ public class ConcreteTestService implements TestService {
 Copy the demo servicer code into `client/Server.java`
 
 ```
-import java.net.SocketException;
-import middleware.network.RUDP;
-import middleware.protos.*;
-
-
 public class Server {
     public static void main(String args[]) {
         // configure RUDP client
+        RUDP rudp = null;
         try {
-            RUDP rudp = new RUDP(5432);
+            rudp = new RUDP(5432);
             TestService service = new ConcreteTestService();
             TestServiceServicer servicer = new TestServiceServicer(service);
             rudp.listen(servicer);
         } catch (SocketException e) {
             System.out.println("Unable to create socket. Exiting");
+        } finally {
+            if (rudp != null) {
+                rudp.close();
+            }
         }
     }
 }
@@ -322,10 +322,11 @@ import middleware.protos.*;
 
 public class Client {
     public static void main(String args[]) {
+        RUDP rudp = null;
         try {
             // configure RUDP client
             InetAddress localhost = InetAddress.getLocalHost();
-            RUDP rudp = new RUDP();
+            rudp = new RUDP();
             int port = 5432;
             TestServiceStub stub = new TestServiceStub(localhost, port, rudp);   
 
@@ -344,6 +345,11 @@ public class Client {
             System.out.println("Unable to create socket. Exiting");
         } catch (Exception e) {
             System.out.println("Request failed");
+        } finally {
+            // close sockets
+            if (rudp != null) {
+                rudp.close();
+            }
         }
     }
 }
