@@ -5,7 +5,15 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.InetAddress;
 import java.util.Random;
+import java.util.Map;
+import java.util.HashMap;
 
+
+class ProtocolException extends RuntimeException {
+    public ProtocolException(String message) {
+        super(message);
+    }
+}
 
 /**
  * RUDP implements a reliable UDP-based protocol using
@@ -19,13 +27,16 @@ public class RUDP {
     private static final int SOCKET_TIMEOUT = 2000;
     private static final int BASE_BACKOFF = 1500;
     private static final float PACKET_DROP_PROBABILITY = 0.2f;
-    private static final Random random = new Random();
+    private static final int START_SEQ = 1;
+    private static final int ACK_SEQ = 0;
+    private final Map<String, Integer> conn_seqs;  // track max seq num for each conn
     private final DatagramSocket socket;
 
 
     public RUDP() throws SocketException {
         socket = new DatagramSocket();
         socket.setSoTimeout(SOCKET_TIMEOUT);
+        this.conn_seqs = new HashMap<>();
         System.out.println("RUDP bound to random port " + socket.getLocalPort());
     }
 
@@ -33,6 +44,7 @@ public class RUDP {
     public RUDP(int port) throws SocketException {
         socket = new DatagramSocket(port);
         socket.setSoTimeout(SOCKET_TIMEOUT);
+        this.conn_seqs = new HashMap<>();
         System.out.println("RUDP bound to port " + port);
     }
 
@@ -45,12 +57,12 @@ public class RUDP {
 
 
     /**
-     * Get request ID from RUDP payload which contains a RUDP header
+     * Get request sequence number from RUDP payload which contains a RUDP header
      * 
      * @param bytes Raw byte array of RUDP payload
      * @return Request ID
      */
-    public int _get_rudp_request_id(byte[] bytes) {
+    public int _get_rudp_seq_num(byte[] bytes) {
         int res = 0;
         for (int i=0; i<4; i++) {
             res <<= 8;
@@ -73,11 +85,12 @@ public class RUDP {
      * 
      * @param addr Receiver addr
      * @param port Receiver port
-     * @param request_id Request ID for RUDP header
+     * @param request_id RUDP sequence number for RUDP header
      * @param data Data with RUDP header
      * @throws IOException
      */
     public void _send_once(InetAddress addr, int port, Bytes rudp_payload) throws IOException {
+        System.out.println("Sending message with seq number " + _get_rudp_seq_num(rudp_payload.bytes()));
         // send packet
         socket.send(
             new DatagramPacket(
@@ -98,36 +111,39 @@ public class RUDP {
      * @param request_id Request ID of current request-response sequence
      * @param request Request data without header
      * @return Received data without header
-     * @throws Exception
+     * @throws ProtocolException
      */
-    public Bytes _send_with_retry(InetAddress addr, int port, Bytes rudp_payload) throws Exception {
-        int request_id = _get_rudp_request_id(rudp_payload.bytes());
+    public Bytes _send_with_retry(InetAddress addr, int port, Bytes rudp_payload) throws ProtocolException {
+        int send_seq = _get_rudp_seq_num(rudp_payload.bytes());
         
         for (int i=1; i<=MAX_RETRIES; i++) {
             try {
-                System.out.println("Sending request with ID " + request_id);
                 _send_once(addr, port, rudp_payload);
                 DatagramPacket resp = _recv();
-                int recv_request_id = _get_rudp_request_id(resp.getData());
-                System.out.println("Received response with ID " + recv_request_id);
-                System.out.println("Expect response with ID " + request_id);
-
-                if (recv_request_id == request_id) {
+                int recv_seq = _get_rudp_seq_num(resp.getData());
+                if (recv_seq == ACK_SEQ) {
+                    // ACKed, end of sequence
+                    return new Bytes(new byte[0], 0);  // return empty response
+                } else if (recv_seq == send_seq + 1) {
                     Bytes resp_bytes = new Bytes(resp.getData(), resp.getLength());
                     return _strip_rudp_header(resp_bytes);
                 }
             }
             catch (SocketTimeoutException _) {}
-            catch (IOException _) {}
+            catch (ProtocolException | IOException e) {
+                System.out.println(e.getMessage());
+            }
             
             if (i >= MAX_RETRIES)
                 break;            
 
             int backoff = BASE_BACKOFF * i;
             System.out.println("Backing off for " + backoff + " ms ...\n");
-            Thread.sleep(backoff);
+            try {
+                Thread.sleep(backoff);
+            } catch (InterruptedException _) {}
         }
-        throw new Exception(
+        throw new ProtocolException(
             "ACK not received after " + MAX_RETRIES + " retries"
         );
     }
@@ -154,33 +170,56 @@ public class RUDP {
      * @throws Exception
      */
     public Bytes send(InetAddress addr, int port, Bytes payload) throws Exception {
-        int request_id = random.nextInt();   
-
         // send request and await for response
         Bytes response = _send_with_retry(
-            addr, port, _add_rudp_header(payload, request_id)
+            addr, port, _add_rudp_header(payload, START_SEQ)
         );
 
         // send ACK (empty payload, only request ID header) after receiving response
         Bytes ack_payload = new Bytes(new byte[0], 0);
-        _send_once(addr, port, _add_rudp_header(ack_payload, request_id));
+        _send_once(addr, port, _add_rudp_header(ack_payload, ACK_SEQ));
         return response;
     }
 
 
     /**
-     * Receive a single packet
+     * Receive a single packet with deduplication logic
      * 
      * @return DatagramPacket received
      */
-    public DatagramPacket _recv() throws IOException, SocketTimeoutException {
-        if (random.nextFloat() < PACKET_DROP_PROBABILITY) {
-            System.out.println("Packet dropped on purpose by receiver");
-            throw new SocketTimeoutException();
-        }
+    public DatagramPacket _recv() throws IOException, SocketTimeoutException, ProtocolException {
+        Random random = new Random();
         byte[] buffer = new byte[BUFFER_SIZE];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         socket.receive(packet);
+        System.out.println("Received message with seq number " + _get_rudp_seq_num(packet.getData()));
+
+        if (random.nextFloat() < PACKET_DROP_PROBABILITY) {
+            System.out.println("Packet dropped on purpose");
+            throw new SocketTimeoutException();
+        }
+
+        // deduplicate
+        String conn = packet.getAddress().getHostAddress() + ":" + packet.getPort();
+        Integer prev_seq = conn_seqs.get(conn);
+        int recv_seq = _get_rudp_seq_num(packet.getData());
+
+        if (recv_seq == ACK_SEQ) {
+            // ACK is sent at end of sequence
+            conn_seqs.remove(conn);
+        } else if (
+            (prev_seq == null && recv_seq <= 2) ||
+            (prev_seq + 2 == recv_seq)
+        ) {
+            // new sequence or correct next sequence 
+            conn_seqs.put(conn, recv_seq);
+        } else {
+            throw new ProtocolException(
+                "Duplicate packet received. " 
+                + "Prev seq: " + prev_seq + ". "
+                + "Recv seq: " + recv_seq 
+            );
+        }
         return packet;
     }
 
@@ -194,14 +233,13 @@ public class RUDP {
     public void listen(Servicer servicer) {
         System.out.println("Listening on port " + socket.getLocalPort() + " ...");
 
-        
         while (true) {
             try {
                 // receive
                 DatagramPacket recv_packet = _recv();
                 Bytes recv_data_with_header = new Bytes(recv_packet.getData(), recv_packet.getLength());
                 Bytes recv_data_without_header = _strip_rudp_header(recv_data_with_header);
-                int recv_request_id = _get_rudp_request_id(recv_data_with_header.bytes());
+                int recv_seq = _get_rudp_seq_num(recv_data_with_header.bytes());
 
                 // execute request
                 Bytes result_bytes = servicer.callback(
@@ -213,12 +251,15 @@ public class RUDP {
                 _send_with_retry(
                     recv_packet.getAddress(), 
                     recv_packet.getPort(),
-                    _add_rudp_header(result_bytes, recv_request_id)
+                    _add_rudp_header(result_bytes, recv_seq + 1)
                 );
             } catch (SocketTimeoutException _ ) {
             } catch (IOException e) {
                 // socket-related exceptions
                 System.out.println("IO exception when receiving via RUDP");
+            } catch (ProtocolException e) {
+                // RUDP protocol exceptions
+                System.out.println(e.getMessage());
             } catch (Exception _) {
                 break;
             }
