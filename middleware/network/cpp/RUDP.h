@@ -101,7 +101,7 @@ private:
     static const int MAX_RETRIES = 5;
     static constexpr float SOCKET_TIMEOUT = 2.0f;
     static constexpr float BASE_BACKOFF = 1.5f;
-    static constexpr float PACKET_DROP_PROBABILITY = 0.2f;
+    static constexpr float PACKET_DROP_PROBABILITY = 0.0f;
     std::unordered_map<std::string, int> conn_seqs;
     int sockfd;
     bool deduplicate;

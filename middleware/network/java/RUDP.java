@@ -26,7 +26,7 @@ public class RUDP {
     private static final int MAX_RETRIES = 5;
     private static final int SOCKET_TIMEOUT = 2000;
     private static final int BASE_BACKOFF = 1500;
-    private static final float PACKET_DROP_PROBABILITY = 0.2f;
+    private static final float PACKET_DROP_PROBABILITY = 0.0f;
     private static final int START_SEQ = 1;
     private static final int ACK_SEQ = 0;
     private final Map<String, Integer> conn_seqs = new HashMap<>();  // track max seq num for each conn
@@ -63,6 +63,10 @@ public class RUDP {
      */
     public int get_buffer_size() {
         return BUFFER_SIZE;
+    }
+
+    private String _get_conn_str(InetAddress addr, int port) {
+        return addr.getHostAddress() + ":" + port;
     }
 
 
@@ -188,6 +192,7 @@ public class RUDP {
         // send ACK (empty payload, only request ID header) after receiving response
         Bytes ack_payload = new Bytes(new byte[0], 0);
         _send_once(addr, port, _add_rudp_header(ack_payload, ACK_SEQ));
+        conn_seqs.remove(_get_conn_str(addr, port));
         return response;
     }
 
@@ -212,7 +217,7 @@ public class RUDP {
         if (!deduplicate) return packet;
 
         // deduplicate
-        String conn = packet.getAddress().getHostAddress() + ":" + packet.getPort();
+        String conn = _get_conn_str(packet.getAddress(), packet.getPort());
         Integer prev_seq = conn_seqs.get(conn);
         int recv_seq = _get_rudp_seq_num(packet.getData());
 
