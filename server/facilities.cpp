@@ -82,7 +82,6 @@ bool check_change_booking_availability(Facility_class* facility, int target_book
 bool check_extend_booking_availability(Facility_class* facility, int target_bookingId, int minutes) {
     vector<pair<int, int>> bookings;
     for (auto &booking : facility->bookings) {
-
         int start = convertDayTimeToInt(booking.start);
         int end  = convertDayTimeToInt(booking.end);
         if (booking.bookingId == target_bookingId) {
@@ -160,9 +159,9 @@ BookResponse Facilities::bookFacility(string facilityName, string user, DayTime 
         res.bookingId = -1;
         return res;
     } else {
-        Booking newBooking = {cur_booking_id, facilityName, user, start, end};
-        facility->bookings.push_back(newBooking);
-        allBookings[cur_booking_id] = &newBooking;
+        Booking* newBooking = new Booking{cur_booking_id, facilityName, user, start, end};
+        facility->bookings.push_back(*newBooking);
+        allBookings[cur_booking_id] = newBooking;
         res.error = "Success";
         res.bookingId = cur_booking_id++;
         facility->checkMonitors();
