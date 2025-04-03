@@ -33,7 +33,7 @@ Sending request with seq number 2  // retry sending response
 Received message with seq number 0
 ```
 
-### Experiemnt 2
+### Experiment 2
 
 Request packet fails to reach server
 
