@@ -1,26 +1,26 @@
 package middleware.protos;
 
 import java.net.InetAddress;
-import middleware.network.Protocol;
+import middleware.network.RUDP;
 import middleware.network.Bytes;
 
 
 public class FacilityBookingClientStub {
 	private final InetAddress server_addr;
 	private final int server_port;
-	private final Protocol proto;
+	private final RUDP proto;
 	
-	public FacilityBookingClientStub(InetAddress server_addr, int server_port, Protocol proto) {
+	public FacilityBookingClientStub(InetAddress server_addr, int server_port, RUDP proto) {
 		this.server_addr = server_addr;
 		this.server_port = server_port;
 		this.proto = proto;
 	}
 
-	public Bytes _send(Bytes data) {
+	public Bytes _send(Bytes data) throws Exception {
 		return proto.send(server_addr, server_port, data);
 	}
 
-	public Response terminate() {
+	public Response terminate() throws Exception {
 		int[] i = {0};
 		byte[] request_data = new byte[proto.get_buffer_size()];
 		Marshaller.marshall_int(request_data, i, 7);
@@ -30,7 +30,7 @@ public class FacilityBookingClientStub {
 		return Unmarshaller.unmarshall_Response(response_data, i);
 	}
 
-	public Response publish(Interval[] availability) {
+	public Response publish(Interval[] availability) throws Exception {
 		int[] i = {0};
 		byte[] request_data = new byte[proto.get_buffer_size()];
 		Marshaller.marshall_int(request_data, i, 8);

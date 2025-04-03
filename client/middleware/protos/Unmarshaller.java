@@ -6,9 +6,8 @@ public class Unmarshaller {
         int res = 0;
         for (int j=0; j<4; j++) {
             res <<= 8;
-            res |= message[i[0]+j];
+            res |= message[i[0]++];
         }
-        i[0] += 4;
         return res;
     }
 
@@ -56,10 +55,12 @@ public class Unmarshaller {
 	}
 
 	public static Booking unmarshall_Booking(byte[] message, int[] i) {
+		int bookingId__arg = unmarshall_int(message, i);
+		String facilityName__arg = unmarshall_string(message, i);
 		String user__arg = unmarshall_string(message, i);
 		DayTime start__arg = unmarshall_DayTime(message, i);
 		DayTime end__arg = unmarshall_DayTime(message, i);
-		return new Booking(user__arg, start__arg, end__arg);
+		return new Booking(bookingId__arg, facilityName__arg, user__arg, start__arg, end__arg);
 	}
 
 	public static Facility unmarshall_Facility(byte[] message, int[] i) {

@@ -34,6 +34,8 @@ public class Marshaller {
 	}
 
 	public static void marshall_Booking(byte[] message, int[] i, Booking val) {
+		marshall_int(message, i, val.bookingId());
+		marshall_string(message, i, val.facilityName());
 		marshall_string(message, i, val.user());
 		marshall_DayTime(message, i, val.start());
 		marshall_DayTime(message, i, val.end());
