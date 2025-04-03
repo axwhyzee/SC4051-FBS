@@ -90,7 +90,7 @@ bool check_extend_booking_availability(Facility_class* facility, int target_book
         }
         bookings.push_back({start, end});
     }
-
+    sort(bookings.begin(), bookings.end());
     int n = bookings.size();
 
     for (int i = 0; i < n-1; i++) {
@@ -100,29 +100,12 @@ bool check_extend_booking_availability(Facility_class* facility, int target_book
     return true;
 }
 
-bool send_callback(vector<Interval> availabilities, Monitor* monitor, string facilityName) {
+void send_callback(vector<Interval> availabilities, Monitor* monitor, string facilityName, RUDP proto) {
     // Send availabilities of facility to client
-    AvailabilityResponse res;
-    res.error = facilityName;
-    res.availability = availabilities;
-    char* request_data;
-    char* response_data;
-    int i = 0;
-    int j = 0;
+    cout << "Publishing updates ... " << endl;
     sockaddr_in client_addr = monitor->client_addr;
-
-    marshall_int(request_data, i, 8);
-    marshall_AvailabilityResponse(request_data, i, res);
-
-
-    // temp RUDP to send callback response
-    RUDP callback_server;
-
-    callback_server.send(client_addr, request_data, i, response_data, j);
-    if (j < 0) {
-        return false;
-    }
-    return true;
+    FacilityBookingClientStub client_stub = FacilityBookingClientStub(client_addr, proto);
+    client_stub.publish(availabilities);
 }
 
 AvailabilityResponse Facilities::queryFacility(string facilityName, vector<Day> days, sockaddr_in client_addr) {
@@ -204,14 +187,12 @@ Response Facilities::subscribe(std::string facilityName, int minutes, sockaddr_i
         return res;
     }
 
-    time_t start_time;
-    time(&start_time);
-
-    Monitor* newMonitor = new Monitor(client_addr, start_time, minutes);
+    Monitor* newMonitor = new Monitor(client_addr, minutes);
 
     Facility_class* facility = facilities[facilityName];
 
     facility->monitors.push_back(newMonitor);
+    cout << "Facility now has monitors " << facility->monitors.size() << endl;
 
     res.error = "success";
     return res;
@@ -262,13 +243,14 @@ void Facility_class::checkMonitors() {
     vector<int> to_remove;
 
     int monitors_len = monitors.size();
+    cout << "Publishing to " << monitors_len << " subscribers" << endl;
     vector<Monitor*> newMonitors;
     vector<Interval> availabilities = get_availability(this);
     for (int i = 0; i < monitors_len; i++) {
         if (monitors[i]->expired()) {
             to_remove.push_back(i);
         } else {
-            send_callback(availabilities, monitors[i], facilityName);
+            send_callback(availabilities, monitors[i], facilityName, proto);
             newMonitors.push_back(monitors[i]);
         }
     }
