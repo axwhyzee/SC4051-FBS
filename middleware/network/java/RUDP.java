@@ -25,7 +25,7 @@ public class RUDP {
     private static final int BUFFER_SIZE = 2048;
     private static final int MAX_RETRIES = 5;
     private static final int SOCKET_TIMEOUT = 2000;
-    private static final int BASE_BACKOFF = 1500;
+    private static final int BASE_BACKOFF = 400;
     private static final float PACKET_DROP_PROBABILITY = 0.0f;
     private static final int START_SEQ = 1;
     private static final int ACK_SEQ = 0;

@@ -74,6 +74,10 @@ int RUDP::get_buffer_size() {
 
 void RUDP::_send_once(sockaddr_in addr, char* rudp_payload, int rudp_payload_len) {
     std::cout << "Sending message with seq num " << _get_rudp_seq_num(rudp_payload) << std::endl;
+    if (_random_probability() < PACKET_DROP_PROBABILITY) {
+        std::cout << "Packet dropped while sending" << std::endl;
+        return;
+    }
     sendto(
         sockfd, 
         rudp_payload, 
@@ -104,6 +108,9 @@ int RUDP::_recv(char* receive_buffer, sockaddr_in& client_addr) {
         return request_len;
     }
 
+    int recv_seq = _get_rudp_seq_num(receive_buffer);
+    std::cout << "Received message with seq num " << recv_seq << std::endl;
+
     // random drop packets
     if (_random_probability() < PACKET_DROP_PROBABILITY) {
         std::cout << "Packet dropped by receiver" << std::endl;
@@ -113,10 +120,7 @@ int RUDP::_recv(char* receive_buffer, sockaddr_in& client_addr) {
     if (!deduplicate) return request_len;
 
     // deduplicate
-    std::string conn = std::string(inet_ntoa(client_addr.sin_addr)) + ":" + std::to_string(ntohs(client_addr.sin_port));
-    int recv_seq = _get_rudp_seq_num(receive_buffer);
-
-    std::cout << "Received message with seq num " << recv_seq << std::endl;
+    std::string conn = std::string(inet_ntoa(client_addr.sin_addr)) + ":" + std::to_string(ntohs(client_addr.sin_port));    
 
     if (recv_seq == ACK_SEQ) {
         // ACK is sent at end of sequence
@@ -201,13 +205,17 @@ void RUDP::listen(Servicer& servicer) {
         try {
             // respond to client
             _add_rudp_header(resp_buffer, recv_seq + 1);
-            _send_with_retry(
-                client_addr,
-                resp_buffer,
-                resp_len + 4,
-                recv_buffer,
-                BUFFER_SIZE
-            );
+            if (deduplicate) {
+                _send_with_retry(
+                    client_addr,
+                    resp_buffer,
+                    resp_len + 4,
+                    recv_buffer,
+                    BUFFER_SIZE
+                );
+            } else {
+                _send_once(client_addr, resp_buffer, resp_len+4);
+            }
         } catch (const std::exception& e) {
             // no ACK received after sending response to client
             // server should ignore and continue running

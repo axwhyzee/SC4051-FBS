@@ -17,7 +17,7 @@ public class FacilityBookingBoundary {
         System.out.println("4. Change Booking");
         System.out.println("5. Extend Booking");
         System.out.println("6. Monitor Facility Availability");
-        System.out.println("8. Exit");
+        System.out.println("7. Exit");
         System.out.print("Choose an option: ");
     }
 
