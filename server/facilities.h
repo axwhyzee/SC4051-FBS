@@ -33,10 +33,7 @@ public:
 };
 class Facility_class {
 public:
-    Facility_class(string name, string type) {
-        facilityName = name;
-        type = type;
-    }
+    Facility_class(string name, string type) : facilityName(name), type(type) {}
     std::string facilityName;
     std::string type;
     std::vector<Booking> bookings;
