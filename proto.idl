@@ -20,13 +20,15 @@ struct Interval {
 }
 
 struct Booking {
+    int bookingId;
     string user;
+    string facilityName;
     DayTime start;
     DayTime end;
 }
 
 struct Facility {
-    string name;           
+    string name;          
     string type;           
     sequence<Booking> bookings; 
 };
