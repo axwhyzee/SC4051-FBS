@@ -1,5 +1,6 @@
 #include <netinet/in.h> 
 #include "servicer.h"
+#include <unordered_map>
 
 #pragma once
 
@@ -26,9 +27,9 @@ public:
     int get_buffer_size();
 
     /**
-     * Read request ID from RUDP payload
+     * Read request sequence number from RUDP payload
      */
-    int _get_rudp_request_id(char* rudp_payload);
+    int _get_rudp_seq_num(char* rudp_payload);
 
     /**
      * Remove RUDP headers from the RUDP payload
@@ -94,10 +95,13 @@ public:
     void listen(Servicer& servicer);
 
 private:
+    static const int ACK_SEQ = 0;
+    static const int START_SEQ = 1;
     static const int BUFFER_SIZE = 2048;
     static const int MAX_RETRIES = 5;
     static constexpr float SOCKET_TIMEOUT = 2.0f;
     static constexpr float BASE_BACKOFF = 1.5f;
     static constexpr float PACKET_DROP_PROBABILITY = 0.2f;
+    std::unordered_map<std::string, int> conn_seqs;
     int sockfd;
 };

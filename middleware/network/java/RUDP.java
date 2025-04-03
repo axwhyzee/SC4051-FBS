@@ -195,7 +195,7 @@ public class RUDP {
         System.out.println("Received message with seq number " + _get_rudp_seq_num(packet.getData()));
 
         if (random.nextFloat() < PACKET_DROP_PROBABILITY) {
-            System.out.println("Packet dropped on purpose");
+            System.out.println("Packet dropped by receiver");
             throw new SocketTimeoutException();
         }
 
