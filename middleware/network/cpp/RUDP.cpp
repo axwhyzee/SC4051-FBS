@@ -18,7 +18,7 @@ float _random_probability() {
 }
 
 
-RUDP::RUDP(int port) {
+RUDP::RUDP(int port, bool deduplicate) : deduplicate(deduplicate) {
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0 ) { 
         throw std::runtime_error("Socket creation failed");
@@ -107,6 +107,8 @@ int RUDP::_recv(char* receive_buffer, sockaddr_in& client_addr) {
         std::cout << "Packet dropped by receiver" << std::endl;
         return -1;
     }
+
+    if (!deduplicate) return request_len;
 
     // deduplicate
     std::string conn = std::string(inet_ntoa(client_addr.sin_addr)) + ":" + std::to_string(ntohs(client_addr.sin_port));

@@ -29,23 +29,28 @@ public class RUDP {
     private static final float PACKET_DROP_PROBABILITY = 0.2f;
     private static final int START_SEQ = 1;
     private static final int ACK_SEQ = 0;
-    private final Map<String, Integer> conn_seqs;  // track max seq num for each conn
+    private final Map<String, Integer> conn_seqs = new HashMap<>();  // track max seq num for each conn
+    private final boolean deduplicate;
     private final DatagramSocket socket;
 
 
     public RUDP() throws SocketException {
-        socket = new DatagramSocket();
+        this.deduplicate = true;
+        this.socket = new DatagramSocket();
         socket.setSoTimeout(SOCKET_TIMEOUT);
-        this.conn_seqs = new HashMap<>();
-        System.out.println("RUDP bound to random port " + socket.getLocalPort());
     }
 
 
-    public RUDP(int port) throws SocketException {
-        socket = new DatagramSocket(port);
+    public RUDP(boolean deduplicate) throws SocketException {
+        this.deduplicate = deduplicate;
+        this.socket = new DatagramSocket();
         socket.setSoTimeout(SOCKET_TIMEOUT);
-        this.conn_seqs = new HashMap<>();
-        System.out.println("RUDP bound to port " + port);
+    }
+
+    public RUDP(int port, boolean deduplicate) throws SocketException {
+        this.deduplicate = deduplicate;
+        this.socket = new DatagramSocket(port);
+        socket.setSoTimeout(SOCKET_TIMEOUT);
     }
 
     /**
@@ -198,6 +203,8 @@ public class RUDP {
             System.out.println("Packet dropped by receiver");
             throw new SocketTimeoutException();
         }
+
+        if (!deduplicate) return packet;
 
         // deduplicate
         String conn = packet.getAddress().getHostAddress() + ":" + packet.getPort();

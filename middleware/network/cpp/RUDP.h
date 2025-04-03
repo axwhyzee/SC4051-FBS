@@ -7,7 +7,7 @@
 
 class RUDP {
 public:
-    RUDP(int port = 0);
+    RUDP(int port = 0, bool deduplicate = true);
     ~RUDP();
 
     /**
@@ -104,4 +104,5 @@ private:
     static constexpr float PACKET_DROP_PROBABILITY = 0.2f;
     std::unordered_map<std::string, int> conn_seqs;
     int sockfd;
+    bool deduplicate;
 };
