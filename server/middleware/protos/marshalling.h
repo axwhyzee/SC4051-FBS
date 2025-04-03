@@ -1,4 +1,6 @@
 #include "proto_types.h"
+#include <cstring>
+#include <stdexcept>
 
 #pragma once
 

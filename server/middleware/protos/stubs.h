@@ -62,13 +62,13 @@ public:
 
 class FacilityBookingClientStub {
 public:
-	FacilityBookingClientStub(sockaddr_in server_addr, RUDP& proto) : server_addr(server_addr), proto(proto) {};
+	FacilityBookingClientStub(sockaddr_in server_addr, RUDP* proto) : server_addr(server_addr), proto(proto) {};
 	~FacilityBookingClientStub() {};
 	Response terminate();
 	Response publish(std::vector<Interval> availability);
 private:
 	sockaddr_in server_addr;
-	RUDP& proto;
+	RUDP* proto;
 };
 
 class FacilityBookingClientServicer : public Servicer {

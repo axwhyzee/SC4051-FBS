@@ -1,3 +1,5 @@
+#include <cstring>
+#include <stdexcept>
 #pragma once
 
 

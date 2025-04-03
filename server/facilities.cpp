@@ -100,7 +100,7 @@ bool check_extend_booking_availability(Facility_class* facility, int target_book
     return true;
 }
 
-void send_callback(vector<Interval> availabilities, Monitor* monitor, string facilityName, RUDP proto) {
+void send_callback(vector<Interval> availabilities, Monitor* monitor, string facilityName, RUDP* proto) {
     // Send availabilities of facility to client
     cout << "Publishing updates ... " << endl;
     sockaddr_in client_addr = monitor->client_addr;
@@ -109,7 +109,7 @@ void send_callback(vector<Interval> availabilities, Monitor* monitor, string fac
 }
 
 AvailabilityResponse Facilities::queryFacility(string facilityName, vector<Day> days, sockaddr_in client_addr) {
-    cout << "queryFacility called"; 
+    cout << "queryFacility called\n"; 
     AvailabilityResponse res = {};
     if (facilities.find(facilityName) == facilities.end()) {
         res.error = "No such facility name.";
@@ -122,7 +122,7 @@ AvailabilityResponse Facilities::queryFacility(string facilityName, vector<Day> 
     }
 }
 BookResponse Facilities::bookFacility(string facilityName, string user, DayTime start, DayTime end, sockaddr_in client_addr) {
-    cout << "bookFacility called";
+    cout << "bookFacility called\n";
     int start_time = convertDayTimeToInt(start);
     int end_time = convertDayTimeToInt(end);
     BookResponse res;
@@ -147,12 +147,12 @@ BookResponse Facilities::bookFacility(string facilityName, string user, DayTime 
         allBookings[cur_booking_id] = newBooking;
         res.error = "Success";
         res.bookingId = cur_booking_id++;
-        facility->checkMonitors();
+        facility->checkMonitors(this->callback_service);
         return res;
     }
 }
 Response Facilities::changeBooking(int bookingId, int offset, sockaddr_in client_addr) {
-    cout << "changeBooking called";
+    cout << "changeBooking called\n";
     Response res;
     if (allBookings.find(bookingId) == allBookings.end()) {
         res.error = "No such booking ID";
@@ -174,13 +174,13 @@ Response Facilities::changeBooking(int bookingId, int offset, sockaddr_in client
                 booking.end = convertIntToDayTime(newEnd);
             }
         }
-        facility->checkMonitors();
+        facility->checkMonitors(this->callback_service);
         res.error = "success";
         return res;
     }
 }
 Response Facilities::subscribe(std::string facilityName, int minutes, sockaddr_in client_addr) {
-    cout << "subscribe called";
+    cout << "subscribe called\n";
     Response res;
     if (facilities.find(facilityName) == facilities.end()) {
         res.error = "No such facility name.";
@@ -198,7 +198,7 @@ Response Facilities::subscribe(std::string facilityName, int minutes, sockaddr_i
     return res;
 }
 Response Facilities::extendBooking(int bookingId, int minutes, sockaddr_in client_addr) {
-    cout << "extendBooking called";
+    cout << "extendBooking called\n";
     Response res;
     if (allBookings.find(bookingId) == allBookings.end()) {
         res.error = "No such booking ID";
@@ -218,13 +218,13 @@ Response Facilities::extendBooking(int bookingId, int minutes, sockaddr_in clien
                 booking.end = convertIntToDayTime(newEnd);
             }
         }
-        facility->checkMonitors();
+        facility->checkMonitors(this->callback_service);
         res.error = "success";
         return res;
     }
 }
 FacilitiesResponse Facilities::viewFacilities(sockaddr_in client_addr) {
-    cout << "viewFacilities called";
+    cout << "viewFacilities called\n";
     FacilitiesResponse res;
 
     res.error = "success";
@@ -239,7 +239,7 @@ FacilitiesResponse Facilities::viewFacilities(sockaddr_in client_addr) {
     return res;
 }
 
-void Facility_class::checkMonitors() {
+void Facility_class::checkMonitors(RUDP* proto) {
     vector<int> to_remove;
 
     int monitors_len = monitors.size();
@@ -250,6 +250,7 @@ void Facility_class::checkMonitors() {
         if (monitors[i]->expired()) {
             to_remove.push_back(i);
         } else {
+            cout << "Publishing to subscribers " << i << endl;
             send_callback(availabilities, monitors[i], facilityName, proto);
             newMonitors.push_back(monitors[i]);
         }

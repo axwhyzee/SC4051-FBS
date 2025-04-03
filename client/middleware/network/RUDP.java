@@ -31,6 +31,7 @@ public class RUDP {
     private static final float PACKET_DROP_PROBABILITY = 0.0f;
     private static final int START_SEQ = 1;
     private static final int ACK_SEQ = 0;
+    private static final int RES_SEQ = 2;
     private final boolean deduplicate;
     private final DatagramSocket socket;
     private final Map<String, Integer> conn_seqs = new HashMap<>();  // track max seq num for each conn
@@ -145,7 +146,7 @@ public class RUDP {
                     return _strip_rudp_header(resp_bytes);
                 }
             }
-            catch (SocketTimeoutException _) {}
+            catch (SocketTimeoutException err) {}
             catch (ProtocolException | IOException e) {
                 System.out.println(e.getMessage());
             }
@@ -157,7 +158,7 @@ public class RUDP {
             System.out.println("Backing off for " + backoff + " ms ...\n");
             try {
                 Thread.sleep(backoff);
-            } catch (InterruptedException _) {}
+            } catch (InterruptedException err) {}
         }
         throw new ProtocolException(
             "ACK not received after " + MAX_RETRIES + " retries"
@@ -219,27 +220,27 @@ public class RUDP {
         }
 
         if (!deduplicate) return packet;
-
-        // deduplicate
-        String conn = _get_conn_str(packet.getAddress(), packet.getPort());
-        Integer prev_seq = conn_seqs.get(conn);
+        // client does not need to check for duplicate
+        // // deduplicate
+        // String conn = _get_conn_str(packet.getAddress(), packet.getPort());
+        // Integer prev_seq = conn_seqs.get(conn);
         
-        if (recv_seq == ACK_SEQ) {
-            // ACK is sent at end of sequence
-            conn_seqs.remove(conn);
-        } else if (
-            (prev_seq == null && recv_seq <= 2) ||
-            (prev_seq + 2 == recv_seq)
-        ) {
-            // new sequence or correct next sequence 
-            conn_seqs.put(conn, recv_seq);
-        } else {
-            throw new ProtocolException(
-                "Duplicate packet received. " 
-                + "Prev seq: " + prev_seq + ". "
-                + "Recv seq: " + recv_seq 
-            );
-        }
+        // if (recv_seq == RES_SEQ || recv_seq == ACK_SEQ) {
+        //     // ACK is sent at end of sequence
+        //     conn_seqs.remove(conn);
+        // } else if (
+        //     (prev_seq == null && recv_seq <= 2) ||
+        //     (prev_seq + 2 == recv_seq)
+        // ) {
+        //     // new sequence or correct next sequence 
+        //     conn_seqs.put(conn, recv_seq);
+        // } else {
+        //     throw new ProtocolException(
+        //         "Duplicate packet received. " 
+        //         + "Prev seq: " + prev_seq + ". "
+        //         + "Recv seq: " + recv_seq 
+        //     );
+        // }
         return packet;
     }
 
@@ -269,17 +270,20 @@ public class RUDP {
                         recv_data_without_header,
                         BUFFER_SIZE
                     );
-                } catch (Exception _) {
+                } catch (Exception err) {
                     System.out.println("Exception raised by callback. Terminating listen ...");
                 } finally {
-                    // respond with request, resending until ACKed
-                    _send_with_retry(
+                    // ACK that availability is received
+                    _send_once(
                         recv_packet.getAddress(), 
                         recv_packet.getPort(),
                         _add_rudp_header(result_bytes, recv_seq + 1)
                     );
+                    // Bytes ack_payload = new Bytes(new byte[0], 0);
+                    // _send_once(recv_packet.getAddress(), 
+                    // recv_packet.getPort(), _add_rudp_header(ack_payload, ACK_SEQ));
                 }
-            } catch (SocketTimeoutException _ ) {
+            } catch (SocketTimeoutException err ) {
             } catch (IOException e) {
                 // socket-related exceptions
                 System.out.println("IO exception when receiving via RUDP");

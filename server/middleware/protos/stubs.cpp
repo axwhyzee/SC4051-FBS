@@ -103,7 +103,7 @@ int FacilityBookingServiceServicer::callback(char* request_data, int request_len
     i = j = 0;
     char arg_id;
     int method_id = unmarshall_int(request_data, i);
-    
+    std::cout << "method ID: " << method_id << '\n';
     switch (method_id) {
 		case 1: {
 			std::string facilityName__arg = unmarshall_string(request_data, i);
@@ -162,11 +162,11 @@ int FacilityBookingServiceServicer::callback(char* request_data, int request_len
 }
 Response FacilityBookingClientStub::terminate() {
 	int i = 0;
-	int buffer_size = proto.get_buffer_size();
+	int buffer_size = proto->get_buffer_size();
 	char response_data[buffer_size];
 	char request_data[buffer_size];
 	marshall_int(request_data, i, 7);
-	int response_len = proto.send(server_addr, request_data, i, response_data, buffer_size);
+	int response_len = proto->send(server_addr, request_data, i, response_data, buffer_size);
 	i = 0;
 	unmarshall_int(response_data, i);  // strip method_id
 	return unmarshall_Response(response_data, i);
@@ -174,14 +174,14 @@ Response FacilityBookingClientStub::terminate() {
 
 Response FacilityBookingClientStub::publish(std::vector<Interval> availability) {
 	int i = 0;
-	int buffer_size = proto.get_buffer_size();
+	int buffer_size = proto->get_buffer_size();
 	char response_data[buffer_size];
 	char request_data[buffer_size];
 	marshall_int(request_data, i, 8);
 	marshall_int(request_data, i, availability.size());
 	for (Interval availability__item : availability)
 		marshall_Interval(request_data, i, availability__item);
-	int response_len = proto.send(server_addr, request_data, i, response_data, buffer_size);
+	int response_len = proto->send(server_addr, request_data, i, response_data, buffer_size);
 	i = 0;
 	unmarshall_int(response_data, i);  // strip method_id
 	return unmarshall_Response(response_data, i);

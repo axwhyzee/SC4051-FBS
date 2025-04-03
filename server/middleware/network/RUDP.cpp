@@ -9,6 +9,12 @@
 #include "servicer.h"
 #include "RUDP.h"
 
+void print_buffer(char* buffer, int len) {
+    for (int i = 0; i < len; i++) {
+        printf("bytes %d: %x | ", i, buffer[i]);
+    }
+    std::cout << '\n';
+}
 
 float _random_probability() {
     std::random_device rd;
@@ -102,9 +108,10 @@ int RUDP::_recv(char* receive_buffer, sockaddr_in& client_addr) {
 
     if (request_len < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
-            std::cout << "Socket recv timed out" << std::endl;
+            // std::cout << "Socket recv timed out" << std::endl;
+            ;
         else
-            std::cerr << "Error receiving data" << std::endl;
+            std::cerr << "Error receiving data errno: " << errno << std::endl;
         return request_len;
     }
 
@@ -190,7 +197,10 @@ void RUDP::listen(Servicer& servicer) {
         // socket has timeout so keep listening  
         if ((recv_len = _recv(recv_buffer, client_addr)) < 0)
             continue;  
-        
+        // for (int i = 0; i < recv_len; i++) {
+        //     recv_buffer[i] = ntohl(recv_buffer[i]);
+        // }
+        print_buffer(recv_buffer, recv_len);
         // handle message w/o RUDP headers
         recv_seq = _get_rudp_seq_num(recv_buffer);
         try {

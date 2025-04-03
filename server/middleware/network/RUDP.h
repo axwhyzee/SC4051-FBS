@@ -1,6 +1,8 @@
 #include <netinet/in.h> 
 #include "servicer.h"
 #include <unordered_map>
+#include <cstring>
+#include <stdexcept>
 
 #pragma once
 

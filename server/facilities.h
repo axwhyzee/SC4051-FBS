@@ -27,15 +27,13 @@ public:
     }
 };
 class Facility_class {
-private:
-    RUDP proto = RUDP();  // to publish updates to subscribing clients
 public:
     Facility_class(string name, string type) : facilityName(name), type(type) {}
     std::string facilityName;
     std::string type;
     std::vector<Booking> bookings;
     std::vector<Monitor*> monitors;
-    void checkMonitors();
+    void checkMonitors(RUDP* callback_server);
     Facility get_facility_struct() {
         Facility res;
         res.bookings = bookings;
@@ -51,11 +49,13 @@ private:
     unordered_map<int, Booking*> allBookings;
 
 public:
+    RUDP* callback_service;
     Facilities() {
         // init 3 facility
         facilities["classroom1"] = new Facility_class("classroom1", "clasroom");
         facilities["classroom2"] = new Facility_class("classroom2", "clasroom");
         facilities["classroom3"] = new Facility_class("classroom3", "clasroom");
+        callback_service = new RUDP(3000);
     }
 
     AvailabilityResponse queryFacility(string facilityName, vector<Day> days, sockaddr_in client_addr);

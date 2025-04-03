@@ -237,7 +237,7 @@ public class Main {
                         System.out.println("Invalid option! Try again.");
                 }
             }
-        } catch (SocketException _) {
+        } catch (SocketException err) {
             System.out.println("Unable to create socket. Exiting ...");
         }
     }
