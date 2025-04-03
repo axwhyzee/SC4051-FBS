@@ -1,6 +1,6 @@
 package middleware.protos;
 
 public interface FacilityBookingClient {
-	Response terminate();
-	Response publish(Interval[] availability);
+	Response terminate() throws Exception;
+	Response publish(Interval[] availability) throws Exception;
 }

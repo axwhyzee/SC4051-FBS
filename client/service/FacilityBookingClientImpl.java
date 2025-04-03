@@ -7,12 +7,13 @@ public class FacilityBookingClientImpl implements FacilityBookingClient {
     
 
     @Override
-    public Response terminate() {
-        return new Response("Service terminated successfully");
+    public Response terminate() throws Exception {
+        throw new Exception("Terminate listening loop");
     }
 
     @Override
     public Response publish(Interval[] availability) {
+        System.out.println("Received updated ... ");
         if (availability.length > 0) {
             FacilityBookingBoundary boundary = new FacilityBookingBoundary();
             boundary.displayMonitoredFacility(availability);

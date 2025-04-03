@@ -257,19 +257,22 @@ public class RUDP {
                 Bytes recv_data_with_header = new Bytes(recv_packet.getData(), recv_packet.getLength());
                 Bytes recv_data_without_header = _strip_rudp_header(recv_data_with_header);
                 int recv_seq = _get_rudp_seq_num(recv_data_with_header.bytes());
-
+                Bytes result_bytes = null;
+                
                 // execute request
-                Bytes result_bytes = servicer.callback(
-                    recv_data_without_header,
-                    BUFFER_SIZE
-                );
-
-                // respond with request, resending until ACKed
-                _send_with_retry(
-                    recv_packet.getAddress(), 
-                    recv_packet.getPort(),
-                    _add_rudp_header(result_bytes, recv_seq + 1)
-                );
+                try {
+                    result_bytes = servicer.callback(
+                        recv_data_without_header,
+                        BUFFER_SIZE
+                    );
+                }  catch (Exception _) {
+                    // respond with request, resending until ACKed
+                    _send_with_retry(
+                        recv_packet.getAddress(), 
+                        recv_packet.getPort(),
+                        _add_rudp_header(result_bytes, recv_seq + 1)
+                    );
+                }
             } catch (SocketTimeoutException _ ) {
             } catch (IOException e) {
                 // socket-related exceptions
@@ -277,8 +280,6 @@ public class RUDP {
             } catch (ProtocolException e) {
                 // RUDP protocol exceptions
                 System.out.println(e.getMessage());
-            } catch (Exception _) {
-                break;
             }
         }
     }

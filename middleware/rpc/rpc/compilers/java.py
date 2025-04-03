@@ -177,7 +177,7 @@ class JavaCompiler(BaseCompiler):
                 code += ", ".join(
                     [_translate_attr(attr) for attr in method.args]
                 )
-                code += ");\n"
+                code += ") throws Exception;\n"
             code += "}"
             (out_dir / f"{model.name}.java").write_text(code)
 
