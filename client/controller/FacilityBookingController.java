@@ -76,7 +76,7 @@ public class FacilityBookingController {
             if (resp.bookingId() > 0) {
                 System.out.println("Booking successfully made! Your booking confirmation ID: " + resp.bookingId());
             } else {
-                System.out.println("Booking failed. Please try again.");
+                System.out.println("Booking failed with error " + resp.error());
             }
         } catch (Exception e) {
             System.out.println("An error occurred during the request: " + e.getMessage());
@@ -96,11 +96,10 @@ public class FacilityBookingController {
 
     }
     
-    public void extendBooking(int bookingId, int minutes) {
-        Response resp = null;
-        
+    public void extendBooking(int bookingId, int minutes) {        
         try {
-            resp = stub.extendBooking(bookingId,minutes);
+            Response resp = stub.extendBooking(bookingId,minutes);
+            System.out.println(resp.error());
         } catch (Exception e) {
             System.out.println("An error occurred during the request: " + e.getMessage());
         }
@@ -118,21 +117,18 @@ public class FacilityBookingController {
         try {
             AvailabilityResponse availResp = stub.queryFacility(facilityName,days);
             boundary.displayAvailability(facilityName,availResp.availability(),daysList); 
-            // stub.subscribe(facilityName,minutes);
+            stub.subscribe(facilityName, minutes);
         } catch (Exception e) {
             System.out.println("An error occurred during the request: " + e.getMessage());
         }
 
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("\nPress Enter to continue...");
-        scanner.nextLine();
 
-        try {
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.print("\nPress Enter to continue...");
+            scanner.nextLine();
             this.service = new FacilityBookingClientImpl();
             this.servicer = new FacilityBookingClientServicer(service);
-
             rudp.listen(this.servicer);
-            throw new Exception("Test exception: Subscription failure");
             
         } catch (Exception e) {
             System.out.println("Subscription has expired."); ;
