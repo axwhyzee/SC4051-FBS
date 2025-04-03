@@ -29,9 +29,9 @@ public class RUDP {
     private static final float PACKET_DROP_PROBABILITY = 0.0f;
     private static final int START_SEQ = 1;
     private static final int ACK_SEQ = 0;
-    private final Map<String, Integer> conn_seqs = new HashMap<>();  // track max seq num for each conn
     private final boolean deduplicate;
     private final DatagramSocket socket;
+    private final Map<String, Integer> conn_seqs = new HashMap<>();  // track max seq num for each conn
 
 
     public RUDP() throws SocketException {
@@ -207,7 +207,9 @@ public class RUDP {
         byte[] buffer = new byte[BUFFER_SIZE];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         socket.receive(packet);
-        System.out.println("Received message with seq number " + _get_rudp_seq_num(packet.getData()));
+        int recv_seq = _get_rudp_seq_num(packet.getData());
+
+        System.out.println("Received message with seq number " + recv_seq);
 
         if (random.nextFloat() < PACKET_DROP_PROBABILITY) {
             System.out.println("Packet dropped by receiver");
@@ -219,8 +221,7 @@ public class RUDP {
         // deduplicate
         String conn = _get_conn_str(packet.getAddress(), packet.getPort());
         Integer prev_seq = conn_seqs.get(conn);
-        int recv_seq = _get_rudp_seq_num(packet.getData());
-
+        
         if (recv_seq == ACK_SEQ) {
             // ACK is sent at end of sequence
             conn_seqs.remove(conn);
@@ -249,6 +250,7 @@ public class RUDP {
      */
     public void listen(Servicer servicer) {
         System.out.println("Listening on port " + socket.getLocalPort() + " ...");
+        conn_seqs.clear();  // reset communication history
 
         while (true) {
             try {
@@ -265,7 +267,9 @@ public class RUDP {
                         recv_data_without_header,
                         BUFFER_SIZE
                     );
-                }  catch (Exception _) {
+                } catch (Exception _) {
+                    System.out.println("Exception raised by callback. Terminating listen ...");
+                } finally {
                     // respond with request, resending until ACKed
                     _send_with_retry(
                         recv_packet.getAddress(), 
