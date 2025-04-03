@@ -281,6 +281,11 @@ public class ConcreteTestService implements TestService {
 Copy the demo servicer code into `client/Server.java`
 
 ```
+import middleware.network.RUDP;
+import middleware.protos.*;
+import java.net.SocketException;
+
+
 public class Server {
     public static void main(String args[]) {
         // configure RUDP client
