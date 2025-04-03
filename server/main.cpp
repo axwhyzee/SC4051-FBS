@@ -18,10 +18,9 @@ int main(int argc, char** argv) {
     if (argc < 2) port = 8888;
     else port = stoi(argv[1]);
 
+    RUDP rudp = RUDP(port);
     Facilities facilitiesBookingService = Facilities();
     FacilityBookingServiceServicer servicer = FacilityBookingServiceServicer(facilitiesBookingService);
-    RUDP rudp = RUDP(port);
-
     rudp.listen(servicer);
 }
 
