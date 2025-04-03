@@ -19,19 +19,16 @@ private:
     int minutes;
 public:
     sockaddr_in client_addr;
-    Monitor(sockaddr_in client_addr, time_t start_time, int minutes) {
-        client_addr = client_addr;
-        start_time = start_time;
-        minutes = minutes;
+    Monitor(sockaddr_in client_addr, int minutes) : client_addr(client_addr), minutes(minutes) {
+        start_time = time(nullptr);
     }
     bool expired() {
-        time_t cur_time;
-        time(&cur_time);
-        
-        return difftime(cur_time, start_time) >= minutes * 60;
+        return difftime(time(nullptr), start_time) >= minutes * 60;
     }
 };
 class Facility_class {
+private:
+    RUDP proto = RUDP();  // to publish updates to subscribing clients
 public:
     Facility_class(string name, string type) : facilityName(name), type(type) {}
     std::string facilityName;
