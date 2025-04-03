@@ -36,8 +36,8 @@ void marshall_Interval(char* message, int& i, Interval val) {
 
 void marshall_Booking(char* message, int& i, Booking val) {
 	marshall_int(message, i, val.bookingId);
-	marshall_string(message, i, val.user);
 	marshall_string(message, i, val.facilityName);
+	marshall_string(message, i, val.user);
 	marshall_DayTime(message, i, val.start);
 	marshall_DayTime(message, i, val.end);
 }

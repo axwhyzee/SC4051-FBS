@@ -58,8 +58,8 @@ Interval unmarshall_Interval(char* message, int& i) {
 Booking unmarshall_Booking(char* message, int& i) {
 	Booking Booking__struct;
 	Booking__struct.bookingId = unmarshall_int(message, i);
-	Booking__struct.user = unmarshall_string(message, i);
 	Booking__struct.facilityName = unmarshall_string(message, i);
+	Booking__struct.user = unmarshall_string(message, i);
 	Booking__struct.start = unmarshall_DayTime(message, i);
 	Booking__struct.end = unmarshall_DayTime(message, i);
 	return Booking__struct;

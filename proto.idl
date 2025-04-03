@@ -21,8 +21,8 @@ struct Interval {
 
 struct Booking {
     int bookingId;
-    string user;
     string facilityName;
+    string user;
     DayTime start;
     DayTime end;
 }
