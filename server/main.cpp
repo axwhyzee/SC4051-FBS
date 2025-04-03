@@ -5,7 +5,7 @@
 #include <algorithm>
 #include "middleware/protos/proto_types.h"
 #include "middleware/protos/stubs.h"
-#include "middleware/network/protocol.h"
+#include "middleware/network/RUDP.h"
 #include "facilities.h"
 
 using namespace std;
@@ -18,10 +18,10 @@ int main(int argc, char** argv) {
     if (argc < 2) port = 8888;
     else port = stoi(argv[1]);
 
-    Facilities facilitiesBookingService;
+    Facilities facilitiesBookingService = Facilities();
     FacilityBookingServiceServicer servicer = FacilityBookingServiceServicer(facilitiesBookingService);
-    RUDP rudp = RUDP();
+    RUDP rudp = RUDP(port);
 
-    rudp.listen(port, servicer);
+    rudp.listen(servicer);
 }
 

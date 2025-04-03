@@ -6,10 +6,9 @@
 #include <ctime>
 #include "middleware/protos/proto_types.h"
 #include "middleware/protos/stubs.h"
-#include "middleware/network/protocol.h"
+#include "middleware/network/RUDP.h"
 #include "middleware/protos/marshalling.h"
 #include "middleware/protos/unmarshalling.h"
-#include "middleware/network/protocol.h"
 #include "middleware/network/servicer.h"
 
 using namespace std;
