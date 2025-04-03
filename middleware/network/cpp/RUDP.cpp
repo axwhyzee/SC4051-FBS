@@ -34,6 +34,8 @@ RUDP::RUDP(int port, bool deduplicate) : deduplicate(deduplicate) {
     // Set receive timeout
     struct timeval timeout;
     timeout.tv_sec = SOCKET_TIMEOUT;
+    timeout.tv_usec = ((int) (SOCKET_TIMEOUT * 100000)) % 100000;
+    
     if (
         setsockopt(
             sockfd,
