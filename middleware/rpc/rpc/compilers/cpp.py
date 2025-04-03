@@ -132,8 +132,6 @@ class CPPCompiler(BaseCompiler):
                     code += f"\t\tmarshall_{nested_type}(message, i, val.{attr.name}[j]);\n"
                 else:
                     # non-sequences
-                    if attr.type == DType.STRING:
-                        code += f"\tmarshall_len_header(message, i, val.{attr.name}.length());\n"
                     code += f"\tmarshall_{attr.type}(message, i, val.{attr.name});\n"
             code += "}\n\n"
             with open(out_dir / MARSHALLING_CPP_FILE, "a") as f:
