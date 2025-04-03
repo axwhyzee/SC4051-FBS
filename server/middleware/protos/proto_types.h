@@ -25,7 +25,9 @@ struct Interval {
 };
 
 struct Booking {
+	int bookingId;
 	std::string user;
+	std::string facilityName;
 	DayTime start;
 	DayTime end;
 };
