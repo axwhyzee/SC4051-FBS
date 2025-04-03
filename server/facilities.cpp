@@ -24,7 +24,7 @@ vector<Interval> get_availability(Facility_class* facility) {
         DayTime end_time = {(Day)i, 23, 59};
         int end = convertDayTimeToInt(end_time);
 
-        while(cur < booking_len && bookings[cur].first > start) {
+        while(cur < booking_len && bookings[cur].first > start && bookings[cur].first < end) {
             res.push_back({convertIntToDayTime(start), convertIntToDayTime(bookings[cur].first)});
             start = min(end, bookings[cur].second + 1);
             cur ++;
