@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import boundary.FacilityBookingBoundary;
 import controller.FacilityBookingController;
+import java.net.SocketException;
 
 public class Main {
     public static void main(String[] args) {
@@ -236,6 +237,8 @@ public class Main {
                         System.out.println("Invalid option! Try again.");
                 }
             }
+        } catch (SocketException _) {
+            System.out.println("Unable to create socket. Exiting ...");
         }
     }
 

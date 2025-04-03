@@ -11,10 +11,9 @@ import middleware.network.RUDP;
 import middleware.protos.*;
 
 import boundary.FacilityBookingBoundary;
+import java.net.SocketException;
 import service.FacilityBookingClientImpl;
 
-
-import java.util.List;
 
 public class FacilityBookingController {
     
@@ -30,7 +29,7 @@ public class FacilityBookingController {
 
 
     // Constructor
-    public FacilityBookingController(String user) {
+    public FacilityBookingController(String user) throws SocketException {
         this.user = user;
         try {
             // configure client
@@ -126,13 +125,13 @@ public class FacilityBookingController {
 
         Scanner scanner = new Scanner(System.in);
         System.out.print("\nPress Enter to continue...");
-        String input = scanner.nextLine();
+        scanner.nextLine();
 
         try {
             this.service = new FacilityBookingClientImpl();
             this.servicer = new FacilityBookingClientServicer(service);
 
-            rudp.listen(this.port, this.servicer);
+            rudp.listen(this.servicer);
             throw new Exception("Test exception: Subscription failure");
             
         } catch (Exception e) {
