@@ -8,7 +8,7 @@
 #include "proto_types.h"
 #include "unmarshalling.h"
 #include "../network/servicer.h"
-#include "../network/protocol.h"
+#include "../network/RUDP.h"
 #include "marshalling.h"
 
 
@@ -28,13 +28,13 @@ AvailabilityResponse FacilityBookingServiceStub::queryFacility(std::string facil
 	return unmarshall_AvailabilityResponse(response_data, i);
 }
 
-BookResponse FacilityBookingServiceStub::bookFacility(std::string facility, std::string user, DayTime start, DayTime end) {
+BookResponse FacilityBookingServiceStub::bookFacility(std::string facilityName, std::string user, DayTime start, DayTime end) {
 	int i = 0;
 	int buffer_size = proto.get_buffer_size();
 	char response_data[buffer_size];
 	char request_data[buffer_size];
 	marshall_int(request_data, i, 2);
-	marshall_string(request_data, i, facility);
+	marshall_string(request_data, i, facilityName);
 	marshall_string(request_data, i, user);
 	marshall_DayTime(request_data, i, start);
 	marshall_DayTime(request_data, i, end);
@@ -117,11 +117,11 @@ int FacilityBookingServiceServicer::callback(char* request_data, int request_len
 			return j;
 		}
 		case 2: {
-			std::string facility__arg = unmarshall_string(request_data, i);
+			std::string facilityName__arg = unmarshall_string(request_data, i);
 			std::string user__arg = unmarshall_string(request_data, i);
 			DayTime start__arg = unmarshall_DayTime(request_data, i);
 			DayTime end__arg = unmarshall_DayTime(request_data, i);
-			BookResponse bookFacility__result = service.bookFacility(facility__arg, user__arg, start__arg, end__arg, client_addr);
+			BookResponse bookFacility__result = service.bookFacility(facilityName__arg, user__arg, start__arg, end__arg, client_addr);
 			marshall_int(response_data, j, 2);
 			marshall_BookResponse(response_data, j, bookFacility__result);
 			return j;

@@ -1,7 +1,7 @@
 #include <netinet/in.h>
 #include "proto_types.h"
 #include "unmarshalling.h"
-#include "../network/protocol.h"
+#include "../network/RUDP.h"
 
 #pragma once
 
@@ -9,7 +9,7 @@ class FacilityBookingService {
 public:
 	virtual ~FacilityBookingService() {};
 	virtual AvailabilityResponse queryFacility(std::string facilityName, std::vector<Day> days, sockaddr_in client_addr) = 0;
-	virtual BookResponse bookFacility(std::string facility, std::string user, DayTime start, DayTime end, sockaddr_in client_addr) = 0;
+	virtual BookResponse bookFacility(std::string facilityName, std::string user, DayTime start, DayTime end, sockaddr_in client_addr) = 0;
 	virtual Response changeBooking(int bookingId, int offset, sockaddr_in client_addr) = 0;
 	virtual Response subscribe(std::string facilityName, int minutes, sockaddr_in client_addr) = 0;
 	virtual Response extendBooking(int bookingId, int minutes, sockaddr_in client_addr) = 0;
@@ -18,17 +18,17 @@ public:
 
 class FacilityBookingServiceStub {
 public:
-	FacilityBookingServiceStub(sockaddr_in server_addr, Protocol& proto) : server_addr(server_addr), proto(proto) {};
+	FacilityBookingServiceStub(sockaddr_in server_addr, RUDP& proto) : server_addr(server_addr), proto(proto) {};
 	~FacilityBookingServiceStub() {};
 	AvailabilityResponse queryFacility(std::string facilityName, std::vector<Day> days);
-	BookResponse bookFacility(std::string facility, std::string user, DayTime start, DayTime end);
+	BookResponse bookFacility(std::string facilityName, std::string user, DayTime start, DayTime end);
 	Response changeBooking(int bookingId, int offset);
 	Response subscribe(std::string facilityName, int minutes);
 	Response extendBooking(int bookingId, int minutes);
 	FacilitiesResponse viewFacilities();
 private:
 	sockaddr_in server_addr;
-	Protocol& proto;
+	RUDP& proto;
 };
 
 class FacilityBookingServiceServicer : public Servicer {
@@ -62,13 +62,13 @@ public:
 
 class FacilityBookingClientStub {
 public:
-	FacilityBookingClientStub(sockaddr_in server_addr, Protocol& proto) : server_addr(server_addr), proto(proto) {};
+	FacilityBookingClientStub(sockaddr_in server_addr, RUDP& proto) : server_addr(server_addr), proto(proto) {};
 	~FacilityBookingClientStub() {};
 	Response terminate();
 	Response publish(std::vector<Interval> availability);
 private:
 	sockaddr_in server_addr;
-	Protocol& proto;
+	RUDP& proto;
 };
 
 class FacilityBookingClientServicer : public Servicer {

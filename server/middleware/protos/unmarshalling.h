@@ -1,6 +1,4 @@
 #include "proto_types.h"
-#include <cstring>
-#include <stdexcept>
 
 #define BYTE 8
 #define LEN_SIZE 4
