@@ -20,7 +20,7 @@ void marshall_string(char* message, int& i, std::string val) {
 }
 
 void marshall_Day(char* message, int& i, Day val) {
-	marshall_int(message, i, (int)val);
+	marshall_int(message, i, (int)val+1);
 }
 
 void marshall_DayTime(char* message, int& i, DayTime val) {

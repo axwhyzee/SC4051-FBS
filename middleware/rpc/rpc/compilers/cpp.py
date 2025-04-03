@@ -168,7 +168,7 @@ class CPPCompiler(BaseCompiler):
 
         def create_type():
             code = f"enum {model.name} {{\n"
-            for i, key in enumerate(model.keys, start=1):
+            for i, key in enumerate(model.keys):
                 code += f"\t{key}={i},\n"
             code += "};\n\n"
             with open(out_dir / TYPES_FILE, "a") as f:
@@ -202,7 +202,7 @@ class CPPCompiler(BaseCompiler):
 
         def create_marshalling():
             code = f"void marshall_{model.name}(char* message, int& i, {model.name} val) {{\n"
-            code += "\tmarshall_int(message, i, (int)val);\n"
+            code += "\tmarshall_int(message, i, (int)val+1);\n"
             code += "}\n\n"
             with open(out_dir / MARSHALLING_CPP_FILE, "a") as f:
                 f.write(code)
