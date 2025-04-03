@@ -40,6 +40,11 @@ public class RUDP {
         socket.setSoTimeout(SOCKET_TIMEOUT);
     }
 
+    public RUDP(int port) throws SocketException {
+        this.deduplicate = true;
+        this.socket = new DatagramSocket(port);
+        socket.setSoTimeout(SOCKET_TIMEOUT);
+    }
 
     public RUDP(boolean deduplicate) throws SocketException {
         this.deduplicate = deduplicate;
