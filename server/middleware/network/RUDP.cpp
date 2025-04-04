@@ -259,8 +259,8 @@ int RUDP::send(
     int result_len = _send_with_retry(
         addr, 
         request_data, 
-        request_len+4, 
-        response_data, 
+        request_len+4,
+        response_data,
         response_len
     );
 
@@ -268,6 +268,7 @@ int RUDP::send(
     char ack_payload[BUFFER_SIZE];
     _add_rudp_header(ack_payload, ACK_SEQ);
     _send_once(addr, ack_payload, 4);
+    conn_seqs.clear();
     return result_len - 4;
 }
 

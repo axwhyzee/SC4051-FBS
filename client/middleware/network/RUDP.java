@@ -262,6 +262,8 @@ public class RUDP {
                 Bytes recv_data_with_header = new Bytes(recv_packet.getData(), recv_packet.getLength());
                 Bytes recv_data_without_header = _strip_rudp_header(recv_data_with_header);
                 int recv_seq = _get_rudp_seq_num(recv_data_with_header.bytes());
+
+                if(recv_seq == ACK_SEQ) continue;
                 Bytes result_bytes = null;
                 
                 // execute request
@@ -272,6 +274,7 @@ public class RUDP {
                     );
                 } catch (Exception err) {
                     System.out.println("Exception raised by callback. Terminating listen ...");
+                    break;
                 } finally {
                     // ACK that availability is received
                     _send_once(
