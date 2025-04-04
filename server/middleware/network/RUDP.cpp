@@ -23,6 +23,10 @@ float _random_probability() {
     return dist(gen);
 }
 
+std::string _get_conn_str(sockaddr_in addr) {
+    return std::string(inet_ntoa(addr.sin_addr)) + ":" + std::to_string(ntohs(addr.sin_port));    
+}
+
 
 RUDP::RUDP(int port, bool deduplicate) : deduplicate(deduplicate) {
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -63,13 +67,38 @@ RUDP::RUDP(int port, bool deduplicate) : deduplicate(deduplicate) {
         ) < 0 
     )
         throw std::runtime_error("Bind failed"); 
-
-    conn_seqs = std::unordered_map<std::string, int>();
 }
 
 RUDP::~RUDP() {
     if (sockfd >= 0)
         close(sockfd);
+}
+
+
+int RUDP::_get_next_seq(sockaddr_in addr) {
+    std::string conn = _get_conn_str(addr);
+    if (conn_seqs.find(conn) == conn_seqs.end()) return 1;
+    return conn_seqs[conn];
+}
+
+
+void RUDP::_set_next_seq(sockaddr_in addr, int seq) {
+    std::string conn = _get_conn_str(addr);
+    conn_seqs[conn] = seq;
+}
+
+
+void RUDP::_cache_response(sockaddr_in addr, char* response, int response_len) {
+    std::string conn = _get_conn_str(addr);
+    conn_resps[conn] = response;
+    conn_resp_lens[conn] = response_len;
+}
+
+
+int RUDP::_get_cached_response(sockaddr_in addr, char* response_buffer) {
+    std::string conn = _get_conn_str(addr);
+    std::memcpy(response_buffer, conn_resps[conn], conn_resp_lens[conn]);
+    return conn_resp_lens[conn];
 }
 
 
@@ -80,10 +109,6 @@ int RUDP::get_buffer_size() {
 
 void RUDP::_send_once(sockaddr_in addr, char* rudp_payload, int rudp_payload_len) {
     std::cout << "Sending message with seq num " << _get_rudp_seq_num(rudp_payload) << std::endl;
-    if (_random_probability() < PACKET_DROP_PROBABILITY) {
-        std::cout << "Packet dropped while sending" << std::endl;
-        return;
-    }
     sendto(
         sockfd, 
         rudp_payload, 
@@ -127,19 +152,16 @@ int RUDP::_recv(char* receive_buffer, sockaddr_in& client_addr) {
     if (!deduplicate) return request_len;
 
     // deduplicate
-    std::string conn = std::string(inet_ntoa(client_addr.sin_addr)) + ":" + std::to_string(ntohs(client_addr.sin_port));    
-
-    if (recv_seq == ACK_SEQ) {
-        // ACK is sent at end of sequence
-        conn_seqs.erase(conn);
-    } else if (
-        (conn_seqs.find(conn) == conn_seqs.end() && recv_seq <= 2) ||
-        (conn_seqs[conn] + 2 == recv_seq)
-    ) {
-        // new sequence or correct next sequence 
-        conn_seqs.emplace(conn, recv_seq);
-    } else {
-        // drop duplicate packet
+    int expected_recv_seq = _get_next_seq(client_addr);
+    if (expected_recv_seq != recv_seq) {
+        std::cout << "Duplicate packet received. ";
+        std::cout << "Expected seq: " << expected_recv_seq << ". ";
+        std::cout << "Recevied seq: " << recv_seq << std::endl;
+        
+        std::string conn = _get_conn_str(client_addr);
+        char* cached_response = conn_resps[conn];
+        int cached_response_len = conn_resp_lens[conn];
+        _send_once(client_addr, cached_response, cached_response_len);
         return -1;
     }
     return request_len;
@@ -164,15 +186,15 @@ int RUDP::_send_with_retry(
 ) {
     int recv_len;
     int send_seq = _get_rudp_seq_num(rudp_payload);
+    _set_next_seq(addr, send_seq + 1);
 
     for (int i=1; i<=MAX_RETRIES; i++) {
         _send_once(addr, rudp_payload, rudp_payload_len);
         
         // recv successfully, check if request ID is correct
         if ((recv_len = _recv(rudp_response)) >= 0) {
-            int recv_seq = _get_rudp_seq_num(rudp_response);
-
             _strip_rudp_header(rudp_response);
+            _set_next_seq(addr, send_seq + 2);
             return recv_len - 4;
         }
         // recv failed, check if should retry or not
@@ -197,10 +219,8 @@ void RUDP::listen(Servicer& servicer) {
         // socket has timeout so keep listening  
         if ((recv_len = _recv(recv_buffer, client_addr)) < 0)
             continue;  
-        // for (int i = 0; i < recv_len; i++) {
-        //     recv_buffer[i] = ntohl(recv_buffer[i]);
-        // }
         print_buffer(recv_buffer, recv_len);
+
         // handle message w/o RUDP headers
         recv_seq = _get_rudp_seq_num(recv_buffer);
         try {
@@ -215,7 +235,10 @@ void RUDP::listen(Servicer& servicer) {
         try {
             // respond to client
             _add_rudp_header(resp_buffer, recv_seq + 1);
-            _send_once(client_addr, resp_buffer, resp_len+4);
+            resp_len += 4;
+            _send_once(client_addr, resp_buffer, resp_len);
+            _set_next_seq(client_addr, recv_seq + 2);
+            _cache_response(client_addr, resp_buffer, resp_len);
         } catch (const std::exception& e) {
             // no ACK received after sending response to client
             // server should ignore and continue running
@@ -240,12 +263,9 @@ int RUDP::send(
     char* response_data,
     int response_len
 ) {
-    // for every new RPC request, generate a random request ID
-    int request_id = 1;
-
     // send request and await for response
-    
-    _add_rudp_header(request_data, request_id);
+    int send_seq = _get_next_seq(addr);
+    _add_rudp_header(request_data, send_seq);
     int result_len = _send_with_retry(
         addr, 
         request_data, 
@@ -253,12 +273,6 @@ int RUDP::send(
         response_data,
         response_len
     );
-
-    // send ACK (empty payload, only request ID header) after receiving response
-    char ack_payload[BUFFER_SIZE];
-    _add_rudp_header(ack_payload, ACK_SEQ);
-    _send_once(addr, ack_payload, 4);
-    conn_seqs.clear();
     return result_len - 4;
 }
 
