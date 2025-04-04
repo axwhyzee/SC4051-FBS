@@ -215,17 +215,7 @@ void RUDP::listen(Servicer& servicer) {
         try {
             // respond to client
             _add_rudp_header(resp_buffer, recv_seq + 1);
-            if (deduplicate) {
-                _send_with_retry(
-                    client_addr,
-                    resp_buffer,
-                    resp_len + 4,
-                    recv_buffer,
-                    BUFFER_SIZE
-                );
-            } else {
-                _send_once(client_addr, resp_buffer, resp_len+4);
-            }
+            _send_once(client_addr, resp_buffer, resp_len+4);
         } catch (const std::exception& e) {
             // no ACK received after sending response to client
             // server should ignore and continue running
