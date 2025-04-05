@@ -235,8 +235,10 @@ public class RUDP {
             InetAddress sender_addr = packet.getAddress();
             int sender_port = packet.getPort();
             Bytes cached_response = _get_cached_response(sender_addr, sender_port);
-            _send_once(sender_addr, sender_port, cached_response);
-
+            if (cached_response != null){
+                _send_once(sender_addr, sender_port, cached_response);
+            }
+            
             throw new DuplicatePacketException(
                 "Duplicate packet received. " 
                 + "Expected seq: " + expected_recv_seq + ". "
@@ -292,7 +294,7 @@ public class RUDP {
             } catch (IOException e) {
                 // socket-related exceptions
                 System.out.println("IO exception when receiving via RUDP");
-            } catch (DuplicatePacketException _) {
+            } catch (DuplicatePacketException err) {
                 // duplicate packet. Send cached response and continue.
             } catch (Exception err) {
                 System.out.println("Exception raised by callback. Terminating listen ...");
