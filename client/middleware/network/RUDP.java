@@ -252,10 +252,13 @@ public class RUDP {
      * 
      * @param servicer
      */
-    public void listen(Servicer servicer) {
+    public void listen(Servicer servicer, int minutes) {
         System.out.println("Listening on port " + socket.getLocalPort() + " ...");
 
-        while (true) {
+        long startTime = System.currentTimeMillis();
+        long endTime = startTime + minutes * 60 * 1000; // Convert minutes to milliseconds
+
+        while (System.currentTimeMillis() < endTime) {
             // execute request
             try {
                 // receive
@@ -299,6 +302,7 @@ public class RUDP {
                 break;
             }
         }
+        System.out.println("Subscription has expired.");
     }
 
     public void close() {

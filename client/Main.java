@@ -13,8 +13,23 @@ public class Main {
         try (Scanner scanner = new Scanner(System.in)) {
             FacilityBookingBoundary boundary = new FacilityBookingBoundary(); 
             String userName = "";
-            String facilityName, input, startTime, endTime;
-            int number, bookingID; 
+            String facilityName, input, startTime, endTime, addr;
+            int number, bookingID, port; 
+
+            // arguments
+            if (args.length < 2) {
+                System.out.println("Usage: java Main <ip-address>");
+                addr = "127.0.0.1"; 
+                port = 8888;
+                
+            } else {
+                addr = args[0];
+                port = Integer.parseInt(args[1]);
+            }
+
+            System.out.println(addr + " "+port);
+
+
 
             // Retrieve user
             while (userName.trim().isEmpty()) {
@@ -28,7 +43,7 @@ public class Main {
             }
 
             // Inititate Service
-            FacilityBookingController service = new FacilityBookingController(userName); 
+            FacilityBookingController service = new FacilityBookingController(addr, port, userName); 
 
             while (true) {
                 boundary.displayMainMenu();

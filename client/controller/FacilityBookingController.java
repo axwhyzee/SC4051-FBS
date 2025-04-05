@@ -22,21 +22,21 @@ public class FacilityBookingController {
     private FacilityBookingBoundary boundary = new FacilityBookingBoundary();
     private FacilityBookingServiceStub stub; 
     private RUDP rudp;
-    private InetAddress localhost;  
+    private InetAddress addr;  
     private int port; 
     FacilityBookingClient service;
     FacilityBookingClientServicer servicer;
 
 
     // Constructor
-    public FacilityBookingController(String user) throws SocketException {
+    public FacilityBookingController(String addr, int port, String user) throws SocketException {
         this.user = user;
         try {
             // configure client
-            this.localhost = InetAddress.getLocalHost();
+            this.addr = InetAddress.getByName(addr);
             this.rudp = new RUDP();
-            this.port = 5432;
-            this.stub = new FacilityBookingServiceStub(this.localhost, this.port, this.rudp);   
+            this.port = port;
+            this.stub = new FacilityBookingServiceStub(this.addr, this.port, this.rudp);   
         } catch (UnknownHostException e) {
             System.out.println("Localhost could not be resolved");
         }
@@ -123,12 +123,10 @@ public class FacilityBookingController {
         }
 
 
-        try (Scanner scanner = new Scanner(System.in)) {
-            System.out.print("\nPress Enter to continue...");
-            scanner.nextLine();
+        try  {
             this.service = new FacilityBookingClientImpl();
             this.servicer = new FacilityBookingClientServicer(service);
-            rudp.listen(this.servicer);
+            rudp.listen(this.servicer,minutes);
             
         } catch (Exception e) {
             System.out.println("Subscription has expired."); ;
