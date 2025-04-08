@@ -108,7 +108,8 @@ int RUDP::get_buffer_size() {
 
 
 void RUDP::_send_once(sockaddr_in addr, char* rudp_payload, int rudp_payload_len) {
-    std::cout << "Sending message with seq num " << _get_rudp_seq_num(rudp_payload) << std::endl;
+    std::cout << "Sending message with seq num " << _get_rudp_seq_num(rudp_payload) << " to: " << _get_conn_str(addr) << std::endl;
+
     sendto(
         sockfd, 
         rudp_payload, 
@@ -141,7 +142,7 @@ int RUDP::_recv(char* receive_buffer, sockaddr_in& client_addr) {
     }
 
     int recv_seq = _get_rudp_seq_num(receive_buffer);
-    std::cout << "Received message with seq num " << recv_seq << std::endl;
+    std::cout << "Received message with seq num " << recv_seq << " from " << _get_conn_str(client_addr) << std::endl;
 
     // random drop packets
     if (_random_probability() < PACKET_DROP_PROBABILITY) {
@@ -159,6 +160,8 @@ int RUDP::_recv(char* receive_buffer, sockaddr_in& client_addr) {
         std::cout << "Recevied seq: " << recv_seq << std::endl;
         
         std::string conn = _get_conn_str(client_addr);
+        if (conn_resps.find(conn) == conn_resps.end()) return -1;
+
         char* cached_response = conn_resps[conn];
         int cached_response_len = conn_resp_lens[conn];
         _send_once(client_addr, cached_response, cached_response_len);
@@ -219,7 +222,7 @@ void RUDP::listen(Servicer& servicer) {
         // socket has timeout so keep listening  
         if ((recv_len = _recv(recv_buffer, client_addr)) < 0)
             continue;  
-        print_buffer(recv_buffer, recv_len);
+        // print_buffer(recv_buffer, recv_len);
 
         // handle message w/o RUDP headers
         recv_seq = _get_rudp_seq_num(recv_buffer);

@@ -34,7 +34,7 @@ public class RUDP {
     private static final int MAX_RETRIES = 5;
     private static final int SOCKET_TIMEOUT = 2000;
     private static final int BASE_BACKOFF = 400;
-    private static final float PACKET_DROP_PROBABILITY = 0.0f;
+    private static final float PACKET_DROP_PROBABILITY = 0.25f;
     private final boolean deduplicate;
     private final DatagramSocket socket;
     private final Map<String, Integer> conn_seqs = new HashMap<>();  // track max seq num for each conn
@@ -235,7 +235,9 @@ public class RUDP {
             InetAddress sender_addr = packet.getAddress();
             int sender_port = packet.getPort();
             Bytes cached_response = _get_cached_response(sender_addr, sender_port);
-            _send_once(sender_addr, sender_port, cached_response);
+
+            if (cached_response != null)
+                _send_once(sender_addr, sender_port, cached_response);
 
             throw new DuplicatePacketException(
                 "Duplicate packet received. " 
